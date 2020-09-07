@@ -4,12 +4,16 @@
   "description": "Wizard Dev Chatbot",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "npm test"
   },
   "author": "Wizard Dev",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "mongoose": "^5.0.0-rc0",
+    "request": "^2.83.0"
   }
+  
 }
