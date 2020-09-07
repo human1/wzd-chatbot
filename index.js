@@ -29,7 +29,7 @@ var ChatStatus = require("./models/chatstatus");
 
 // Sets server port and logs message on success
 const host = '0.0.0.0';
-const port = process.env.PORT_CHATBOT || 1337;
+const port = process.env.PORT || 1337;
 
 app.listen(port, host, () => console.log('webhook is listening at port: ' + port));
 
