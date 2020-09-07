@@ -28,8 +28,10 @@ const
 var ChatStatus = require("./models/chatstatus");
 
 // Sets server port and logs message on success
-console.log('env: ' + process)
-app.listen(process.env.PORT || 1337, () => console.log('webhook is listening at port: ' + process.env.PORT || 1337));
+console.log('env: ')
+console.log(process.env)
+var _PORT = process.env.PORT || 1337
+app.listen(_PORT, () => console.log('webhook is listening at port: ' + _PORT));
 
 // Accepts POST requests at /webhook endpoint
 app.post('/webhook', (req, res) => {
