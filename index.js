@@ -172,7 +172,7 @@ function handlePostback(sender_psid, received_postback) {
             updateStatus(sender_psid, payload, handleStartYesPostback);
             break;
         case START_NO:
-            updateStatus(sender_psid, payload, handleStartNoPostback);
+            updateStatus(sender_psid, payload, showAllData);
             break;
         // case OTHER_HELP_YES:
         //     updateStatus(sender_psid, payload, handleOtherHelpPostback);
@@ -190,7 +190,7 @@ function handlePostback(sender_psid, received_postback) {
         // case PREF_REVEGETATION:
         case OVER_1M:
         case LESS_THAN_1M:
-            updatePreference(sender_psid, payload, handlePreferencePostback);
+            updateStatus(sender_psid, payload, showAllData);
             break;
         default:
             console.log('Cannot differentiate the payload type');
@@ -253,15 +253,10 @@ function handleStartYesPostback(sender_psid) {
     callSendAPI(sender_psid, yesPayload);
 }
 
-function handleStartNoPostback(sender_psid) {
+function showAllData(sender_psid) {
+    const listData = ChatStatus.find( {} );
     const noPayload = {
-        "text": "Can we use your data if needed?",
-        "quick_replies": [
-            {
-                "content_type": "text",
-                "title": "Yes."
-            }
-        ]
+        "text": listData,
     };
     callSendAPI(sender_psid, noPayload);
 }
