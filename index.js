@@ -64,14 +64,12 @@ app.post('/webhook', (req, res) => {
         body.entry.forEach((pageEntry) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((messagingEvent) => {
-                // There have some button action. Need to handle all of them
                 if (messagingEvent.postback) {
-                    // GREETING - Clicked in button.
                     console.log('--------------- Postback');
                     console.log('Post back: ' + messagingEvent.postback);
                     handlePostback(messagingEvent.sender.id, messagingEvent.postback);
+
                 } else if (messagingEvent.message) {
-                    //
                     if (messagingEvent.message.quick_reply) {
                         console.log('--------------- Quick reploy: ');
                         console.log(messagingEvent);
@@ -92,7 +90,6 @@ app.post('/webhook', (req, res) => {
 
 function handleMessage(sender_psid, message) {
     console.log('handleMEssage message: ' + sender_psid);
-    console.log(message)
     handlePostback(sender_psid, { payload: GREETING }, message);
     return;
 
@@ -127,9 +124,9 @@ function handleMessage(sender_psid, message) {
     // }
 }
 
-function updateStatus(sender_psid, status, message, callback) {
+function updateStatus(sender_psid, status, messagePostBack, message, callback) {
     const query = { user_id: sender_psid };
-    const update = { status: status, content: message };
+    const update = { status: status, question: messagePostBack, content: message };
     const options = { upsert: status === GREETING };
 
     ChatStatus.findOneAndUpdate(query, update, options).exec((err, cs) => {
@@ -162,74 +159,97 @@ function callSendAPI(sender_psid, response) {
 }
 
 function handlePostback(sender_psid, received_postback, message) {
+    console.log('handlePostback');
+    console.log(received_postback)
     const payload = received_postback.payload;
 
     // Process based on the user answer
     switch (payload) {
         case GREETING:
-            updateStatus(sender_psid, payload, message, handleGreetingPostback);
+            request({
+                url: `${FACEBOOK_GRAPH_API_BASE_URL}${sender_psid}`,
+                qs: {
+                    access_token: process.env.PAGE_ACCESS_TOKEN,
+                    fields: "first_name"
+                },
+                method: "GET"
+            }, function (error, response, body) {
+                var greeting = "";
+                if (error) {
+                    console.log("Error getting user's name: " + error);
+                } else {
+                    var bodyObj = JSON.parse(body);
+                    const name = bodyObj.first_name;
+                    greeting = "Hi " + name + "! ";
+                }
+                const messagePostBack = greeting + "Can we save your data?";
+                updateStatus(sender_psid, payload, messagePostBack, message, handleGreetingPostback);
+            });
             break;
         case START_YES:
-            updateStatus(sender_psid, payload, message, handleStartYesPostback);
+            updateStatus(sender_psid, payload, "What's the price of your intended home value?", message, handleYesPostback);
             break;
         case START_NO:
-            updateStatus(sender_psid, payload, message, handleStartNoPostback);
+            updateStatus(sender_psid, payload, "That fine, just keep in touch", message, handleStartNo);
             break;
+        // case QESTION_1:
+        //     updateStatus(sender_psid, payload, message, handleQuestion1);
+        //     break;
+        // case QUESTION_2:
+        //     updateStatus(sender_psid, payload, message, handleQuestion2);
+        //     break;
         default:
             console.log('Cannot differentiate the payload type');
     }
 }
 
-function handleGreetingPostback(sender_psid) {
-    request({
-        url: `${FACEBOOK_GRAPH_API_BASE_URL}${sender_psid}`,
-        qs: {
-            access_token: process.env.PAGE_ACCESS_TOKEN,
-            fields: "first_name"
-        },
-        method: "GET"
-    }, function (error, response, body) {
-        var greeting = "";
-        if (error) {
-            console.log("Error getting user's name: " + error);
-        } else {
-            var bodyObj = JSON.parse(body);
-            const name = bodyObj.first_name;
-            greeting = "Hi " + name + "! ";
-        }
-        const message = greeting + "How can we help you?";
-        const greetingPayload = {
-            "text": message,
-            "quick_replies": [
-                {
-                    "content_type": "text",
-                    "title": "Yes, I need your help!",
-                    "payload": START_YES
-                },
-                {
-                    "content_type": "text",
-                    "title": "No, thanks.",
-                    "payload": START_NO
-                }
-            ]
-        };
-        callSendAPI(sender_psid, greetingPayload);
-    });
-}
-
-function handleStartYesPostback(sender_psid) {
-    const yesPayload = {
-        "text": " Ok, How much is your intended home value?"
+function handleGreetingPostback(sender_psid, question) {
+    const greetingPayload = {
+        "text": question,
+        "quick_replies": [
+            {
+                "content_type": "text",
+                "title": "Yes, I need your help!",
+                "payload": START_YES
+            },
+            {
+                "content_type": "text",
+                "title": "No, thanks.",
+                "payload": START_NO
+            }
+        ]
     };
-    callSendAPI(sender_psid, yesPayload);
+    callSendAPI(sender_psid, greetingPayload);
 }
 
-function handleStartNoPostback(sender_psid) {
+function handleYesPostback(sender_psid, question) {
+    const allowSave = {
+        "text": question,
+    };
+    callSendAPI(sender_psid, allowSave);
+}
+
+function handleStartNo(sender_psid, messagePostBack) {
     const noPayload = {
-        "text": "What's the price of your intended home value?",
+        "text": messagePostBack,
     };
     callSendAPI(sender_psid, noPayload);
 }
+
+// function handleQuestion1(sender_psid) {
+//     const questionPayload1 = {
+//         "text": " Ok, How much is your intended home value?",
+//         "payload": START_NO
+//     };
+//     callSendAPI(sender_psid, questionPayload1);
+// }
+
+// function handleQuestion2(sender_psid) {
+//     const questionPayload2 = {
+//         "text": "What's the price of your intended home value?",
+//     };
+//     callSendAPI(sender_psid, questionPayload2);
+// }
 
 // function handleConfirmLocation(sender_psid, geocoding_location, geocoding_formattedAddr) {
 //     console.log('Geocoding api result: ', geocoding_location);
