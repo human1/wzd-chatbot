@@ -77,6 +77,25 @@ app.post('/webhook', (req, res) => {
     }
 });
 
+// Testing only
+function sendMessage(senderId, message) {
+    request({
+      url: 'https://graph.facebook.com/v2.6/me/messages',
+      qs: {
+        access_token: "token",
+      },
+      method: 'POST',
+      json: {
+        recipient: {
+          id: senderId
+        },
+        message: {
+          text: message
+        },
+      }
+    });
+  }
+
 
 app.get('/webhook', (req, res) => {
 
