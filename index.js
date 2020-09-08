@@ -14,36 +14,31 @@ const AUSTRALIA_NO = 'AUSTRALIA_NO';
 const OTHER_HELP_YES = 'OTHER_HELP_YES';
 const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
 const GOOGLE_GEOCODING_API = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
-// const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/db_wzd_chatbot';
 const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 
 const
     request = require('request'),
     express = require('express'),
     body_parser = require('body-parser'),
-    //   mongoose = require('mongoose'),
+    mongoose = require('mongoose'),
     app = express().use(body_parser.json()); // creates express http server
 
-//  var db = mongoose.connect(MONGODB_URI);
+var db = mongoose.connect(MONGODB_URI);
 var ChatStatus = require("./models/chatstatus");
 
-// Sets server port and logs message on success
 const host = '0.0.0.0';
 const port = process.env.PORT || 1337;
 
 app.listen(port, host, () => console.log('webhook is listening at port: ' + port));
 
-// Accepts POST requests at /webhook endpoint
 app.post('/webhook', (req, res) => {
 
-    // Return a '200 OK' response to all events
     res.status(200).send('EVENT_RECEIVED');
 
     const body = req.body;
 
     if (body.object === 'page') {
-        // Iterate over each entry
-        // There may be multiple if batched
         if (body.entry && body.entry.length <= 0) {
             return;
         }
@@ -51,59 +46,57 @@ app.post('/webhook', (req, res) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((messagingEvent) => {
                 console.log({ messagingEvent });
-                if (messagingEvent.postback) {
-                    handlePostback(messagingEvent.sender.id, messagingEvent.postback);
-                } else if (messagingEvent.message) {
-                    if (messagingEvent.message.quick_reply) {
-                        handlePostback(messagingEvent.sender.id, messagingEvent.message.quick_reply);
-                    } else {
-                        handleMessage(messagingEvent.sender.id, messagingEvent.message);
-                    }
-                } else {
-                    console.log(
-                        'Webhook received unknown messagingEvent: ',
-                        messagingEvent
-                    );
+                
+                var senderId = message.sender.id;
+                if (message.message) {
+                  // If user send text
+                  if (message.message.text) {
+                    var text = message.message.text;
+                    console.log(text); // In tin nhắn người dùng
+                    sendMessage(senderId, "Tui là bot đây: " + text);
+                  }
                 }
+
+                // if (messagingEvent.postback) {
+                //     // Clicked in button.
+                //     handlePostback(messagingEvent.sender.id, messagingEvent.postback);
+                // } else if (messagingEvent.message) {
+                //     if (messagingEvent.message.quick_reply) {
+                //         handlePostback(messagingEvent.sender.id, messagingEvent.message.quick_reply);
+                //     } else {
+                //         handleMessage(messagingEvent.sender.id, messagingEvent.message);
+                //     }
+                // } else {
+                //     console.log(
+                //         'Webhook received unknown messagingEvent: ',
+                //         messagingEvent
+                //     );
+                // }
             });
         });
     }
 });
 
-// Accepts GET requests at the /webhook endpoint
+
 app.get('/webhook', (req, res) => {
 
-    /** UPDATE YOUR VERIFY TOKEN **/
     const VERIFY_TOKEN = process.env.VERIFICATION_TOKEN;
-
-    // Parse params from the webhook verification request
     let mode = req.query['hub.mode'];
     let token = req.query['hub.verify_token'];
     let challenge = req.query['hub.challenge'];
 
-    console.log('- Verify request - ');
-    console.log(req.query);
-
-    // Check if a token and mode were sent
     if (mode && token) {
-        console.log(' mode && token ');
 
-        // Check the mode and token sent are correct
         if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-
-            // Respond with 200 OK and challenge token from the request
             console.log('WEBHOOK_VERIFIED');
             res.status(200).send(challenge);
-
         } else {
-            // Responds with '403 Forbidden' if verify tokens do not match
             res.sendStatus(403);
         }
     }
 });
 
 function handleMessage(sender_psid, message) {
-    // check if it is a location message
     console.log('handleMEssage message:', JSON.stringify(message));
 
     const locationAttachment = message && message.attachments && message.attachments.find(a => a.type === 'location');
@@ -440,10 +433,9 @@ function updatePreference(sender_psid, perference, callback) {
 }
 
 function handlePostback(sender_psid, received_postback) {
-    // Get the payload for the postback
     const payload = received_postback.payload;
 
-    // Set the response and udpate db based on the postback payload
+    // Process based on the user answer
     switch (payload) {
         case START_SEARCH_YES:
             updateStatus(sender_psid, payload, handleStartSearchYesPostback);
@@ -475,7 +467,6 @@ function handlePostback(sender_psid, received_postback) {
 }
 
 function callSendAPI(sender_psid, response) {
-    // Construct the message body
     console.log('message to be sent: ', response);
     let request_body = {
         "recipient": {
