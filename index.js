@@ -14,7 +14,7 @@ const AUSTRALIA_NO = 'AUSTRALIA_NO';
 const OTHER_HELP_YES = 'OTHER_HELP_YES';
 const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
 const GOOGLE_GEOCODING_API = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/db_wzd_chatbot';
+// const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/db_wzd_chatbot';
 const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 
 const
@@ -24,8 +24,8 @@ const
     mongoose = require('mongoose'),
     app = express().use(body_parser.json()); // creates express http server
 
-var db = mongoose.connect(MONGODB_URI);
-var ChatStatus = require("./models/chatstatus");
+// var db = mongoose.connect(MONGODB_URI);
+// var ChatStatus = require("./models/chatstatus");
 
 const host = '0.0.0.0';
 const port = process.env.PORT || 1337;
@@ -46,7 +46,7 @@ app.post('/webhook', (req, res) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((messagingEvent) => {
                 console.log({ messagingEvent });
-                
+
                 var senderId = message.sender.id;
                 if (message.message) {
                   // If user send text
