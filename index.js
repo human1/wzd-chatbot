@@ -27,7 +27,7 @@ const
 var db = mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }).then(
     () => console.log('DB Connected!'))
     .catch(err => {
-        console.log(`DB Connection Error: ${ err.message }`);
+        console.log(`DB Connection Error: ${err.message}`);
     });
 
 var ChatStatus = require("./models/chatstatus");
@@ -36,64 +36,6 @@ const host = '0.0.0.0';
 const port = process.env.PORT || 1337;
 
 app.listen(port, host, () => console.log('webhook is listening at port: ' + port));
-
-app.post('/webhook', (req, res) => {
-
-    res.status(200).send('EVENT_RECEIVED');
-
-    const body = req.body;
-
-    if (body.object === 'page') {
-        if (body.entry && body.entry.length <= 0) {
-            return;
-        }
-        body.entry.forEach((pageEntry) => {
-            // Iterate over each messaging event and handle accordingly
-            pageEntry.messaging.forEach((messagingEvent) => {
-                console.log('===============');
-                console.log({ messagingEvent });
-                console.log('===============');
-                // There have some button action. Need to handle all of them
-                if (messagingEvent.postback) {
-                    // GREETING - Clicked in button.
-                    console.log('---------------');
-                    console.log('Post back: ' + messagingEvent.postback);
-                    handlePostback(messagingEvent.sender.id, messagingEvent.postback);
-                } else if (messagingEvent.message) {
-                    //
-                    console.log('---------------');
-                    console.log('message: ');
-                    console.log(messagingEvent.message)
-                    if (messagingEvent.message.quick_reply) {
-                        console.log('--------------- Quick reploy: ');
-                        console.log(messagingEvent.message.quick_reply);
-
-                        handlePostback(messagingEvent.sender.id, messagingEvent.message.quick_reply);
-                    } else {
-                        console.log('--------------- message: ');
-                        console.log(messagingEvent.message);
-                        handleMessage(messagingEvent.sender.id, messagingEvent.message);
-                    }
-                } else {
-                    // First time they text.
-                    const greetingPayload = {
-                        "greeting":[
-                            {
-                              "locale":"default",
-                              "text":"Hello {{user_full_name}}!"
-                            }
-                          ]
-                    };
-                    callSendAPI(sender_psid, greetingPayload);
-                    // console.log(
-                    //     'Webhook received unknown messagingEvent: ',
-                    //     messagingEvent
-                    // );
-                }
-            });
-        });
-    }
-});
 
 app.get('/webhook', (req, res) => {
     const VERIFY_TOKEN = process.env.VERIFICATION_TOKEN;
@@ -112,13 +54,46 @@ app.get('/webhook', (req, res) => {
     }
 });
 
-function handleMessage(sender_psid, message) {
-    console.log('handleMEssage message:', JSON.stringify(message));
+app.post('/webhook', (req, res) => {
+    res.status(200).send('EVENT_RECEIVED');
+    const body = req.body;
+    if (body.object === 'page') {
+        if (body.entry && body.entry.length <= 0) {
+            return;
+        }
+        body.entry.forEach((pageEntry) => {
+            // Iterate over each messaging event and handle accordingly
+            pageEntry.messaging.forEach((messagingEvent) => {
+                // There have some button action. Need to handle all of them
+                if (messagingEvent.postback) {
+                    // GREETING - Clicked in button.
+                    console.log('--------------- Postback');
+                    console.log('Post back: ' + messagingEvent.postback);
+                    handlePostback(messagingEvent.sender.id, messagingEvent.postback);
+                } else if (messagingEvent.message) {
+                    //
+                    if (messagingEvent.message.quick_reply) {
+                        console.log('--------------- Quick reploy: ');
+                        console.log(messagingEvent);
 
-    console.log('********* GREETING');
-    console.log()
-    console.log('*********');
-    handlePostback(sender_psid, { payload: GREETING });
+                        handlePostback(messagingEvent.sender.id, messagingEvent.message.quick_reply);
+                    } else {
+                        console.log('--------------- message: ');
+                        console.log(messagingEvent);
+                        handleMessage(messagingEvent.sender.id, messagingEvent.message);
+                    }
+                } else {
+                    console.log('Webhook received unknown messagingEvent: ', messagingEvent);
+                }
+            });
+        });
+    }
+});
+
+function handleMessage(sender_psid, message) {
+    console.log('handleMEssage message: ' + sender_psid);
+    console.log(message)
+    handlePostback(sender_psid, { payload: GREETING }, message);
     return;
 
     // const locationAttachment = message && message.attachments && message.attachments.find(a => a.type === 'location');
@@ -152,80 +127,9 @@ function handleMessage(sender_psid, message) {
     // }
 }
 
-function handlePostback(sender_psid, received_postback) {
-    const payload = received_postback.payload;
-
-    // Process based on the user answer
-    switch (payload) {
-        // case START_SEARCH_YES:
-        //     updateStatus(sender_psid, payload, handleStartSearchYesPostback);
-        //     break;
-        // case START_SEARCH_NO:
-        //     updateStatus(sender_psid, payload, handleStartSearchNoPostback);
-        //     break;
-        // case OTHER_HELP_YES:
-        //     updateStatus(sender_psid, payload, handleOtherHelpPostback);
-        //     break;
-        // case AUSTRALIA_YES:
-        //     updateStatus(sender_psid, payload, handleAustraliaYesPostback);
-        //     break;
-        // case AU_LOC_PROVIDED:
-        //     updateStatus(sender_psid, payload, askForActivityPreference);
-        //     break;
-        case GREETING:
-            updateStatus(sender_psid, payload, handleGreetingPostback);
-            break;
-        // case PREF_CLEANUP:
-        // case PREF_REVEGETATION:
-        // case PREF_BIO_SURVEY:
-        // case PREF_CANVASSING:
-        //     updatePreference(sender_psid, payload, handlePreferencePostback);
-        //     break;
-        default:
-            console.log('Cannot differentiate the payload type');
-    }
-}
-
-function handleGreetingPostback(sender_psid) {
-    request({
-        url: `${FACEBOOK_GRAPH_API_BASE_URL}${sender_psid}`,
-        qs: {
-            access_token: process.env.PAGE_ACCESS_TOKEN,
-            fields: "first_name"
-        },
-        method: "GET"
-    }, function (error, response, body) {
-        var greeting = "";
-        if (error) {
-            console.log("Error getting user's name: " + error);
-        } else {
-            var bodyObj = JSON.parse(body);
-            const name = bodyObj.first_name;
-            greeting = "Hi " + name + ". ";
-        }
-        const message = greeting + "Would you like to join a community of like-minded pandas in your area?";
-        const greetingPayload = {
-            "text": message,
-            "quick_replies": [
-                {
-                    "content_type": "text",
-                    "title": "Yes!",
-                    "payload": START_SEARCH_YES
-                },
-                {
-                    "content_type": "text",
-                    "title": "No, thanks.",
-                    "payload": START_SEARCH_NO
-                }
-            ]
-        };
-        callSendAPI(sender_psid, greetingPayload);
-    });
-}
-
-function updateStatus(sender_psid, status, callback) {
+function updateStatus(sender_psid, status, message, callback) {
     const query = { user_id: sender_psid };
-    const update = { status: status };
+    const update = { status: status, content: message };
     const options = { upsert: status === GREETING };
 
     ChatStatus.findOneAndUpdate(query, update, options).exec((err, cs) => {
@@ -255,6 +159,76 @@ function callSendAPI(sender_psid, response) {
             console.error("Unable to send message:", err);
         }
     });
+}
+
+function handlePostback(sender_psid, received_postback, message) {
+    const payload = received_postback.payload;
+
+    // Process based on the user answer
+    switch (payload) {
+        case GREETING:
+            updateStatus(sender_psid, payload, message, handleGreetingPostback);
+            break;
+        case START_YES:
+            updateStatus(sender_psid, payload, message, handleStartYesPostback);
+            break;
+        case START_NO:
+            updateStatus(sender_psid, payload, message, handleStartNoPostback);
+            break;
+        default:
+            console.log('Cannot differentiate the payload type');
+    }
+}
+
+function handleGreetingPostback(sender_psid) {
+    request({
+        url: `${FACEBOOK_GRAPH_API_BASE_URL}${sender_psid}`,
+        qs: {
+            access_token: process.env.PAGE_ACCESS_TOKEN,
+            fields: "first_name"
+        },
+        method: "GET"
+    }, function (error, response, body) {
+        var greeting = "";
+        if (error) {
+            console.log("Error getting user's name: " + error);
+        } else {
+            var bodyObj = JSON.parse(body);
+            const name = bodyObj.first_name;
+            greeting = "Hi " + name + "! ";
+        }
+        const message = greeting + "How can we help you?";
+        const greetingPayload = {
+            "text": message,
+            "quick_replies": [
+                {
+                    "content_type": "text",
+                    "title": "Yes, I need your help!",
+                    "payload": START_YES
+                },
+                {
+                    "content_type": "text",
+                    "title": "No, thanks.",
+                    "payload": START_NO
+                }
+            ]
+        };
+        callSendAPI(sender_psid, greetingPayload);
+    });
+}
+
+function handleStartYesPostback(sender_psid) {
+    const yesPayload = {
+        "text": " Ok, How much is your intended home value?"
+    };
+    callSendAPI(sender_psid, yesPayload);
+}
+
+function handleStartNoPostback(sender_psid) {
+    const noPayload = {
+        "text": "What's the price of your intended home value?",
+    };
+    callSendAPI(sender_psid, noPayload);
 }
 
 // function handleConfirmLocation(sender_psid, geocoding_location, geocoding_formattedAddr) {
@@ -378,39 +352,6 @@ function callSendAPI(sender_psid, response) {
 //     callSendAPI(sender_psid, response);
 // }
 
-// function handleStartSearchYesPostback(sender_psid) {
-//     const yesPayload = {
-//         "text": " Ok, I have to get to know you a little bit more for this. Do you live in Australia?",
-//         "quick_replies": [
-//             {
-//                 "content_type": "text",
-//                 "title": "Yes!",
-//                 "payload": AUSTRALIA_YES
-//             },
-//             {
-//                 "content_type": "text",
-//                 "title": "Nope.",
-//                 "payload": AUSTRALIA_NO
-//             }
-//         ]
-//     };
-//     callSendAPI(sender_psid, yesPayload);
-// }
-
-// function handleStartSearchNoPostback(sender_psid) {
-//     const noPayload = {
-//         "text": "That's ok my friend, do you want to find other ways to help WWF?",
-//         "quick_replies": [
-//             {
-//                 "content_type": "text",
-//                 "title": "Yes.",
-//                 "payload": OTHER_HELP_YES
-//             }
-//         ]
-//     };
-//     callSendAPI(sender_psid, noPayload);
-// }
-
 // function handleOtherHelpPostback(sender_psid) {
 //     const campaigns = {
 //         "attachment": {
@@ -445,17 +386,17 @@ function callSendAPI(sender_psid, response) {
 //     callSendAPI(sender_psid, campaigns);
 // }
 
-// function handleAustraliaYesPostback(sender_psid) {
-//     const askForLocationPayload = {
-//         "text": "Where about do you live?",
-//         "quick_replies": [
-//             {
-//                 "content_type": "location"
-//             }
-//         ]
-//     };
-//     callSendAPI(sender_psid, askForLocationPayload);
-// }
+function handleOver1MPostback(sender_psid) {
+    const askForLocationPayload = {
+        "text": "Where about do you live?",
+        "quick_replies": [
+            {
+                "content_type": "location"
+            }
+        ]
+    };
+    callSendAPI(sender_psid, askForLocationPayload);
+}
 
 // function handlePreferencePostback(sender_psid, chatStatus) {
 //     console.log('handlePreferencePostback params: ', chatStatus);
