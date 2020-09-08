@@ -93,7 +93,7 @@ app.post('/webhook', (req, res) => {
 function handleMessage(sender_psid, message) {
     console.log('handleMEssage message: ' + sender_psid);
     console.log(message)
-    handlePostback(sender_psid, { payload: GREETING }, message);
+    handlePostback(sender_psid, { payload: GREETING });
     return;
 
     // const locationAttachment = message && message.attachments && message.attachments.find(a => a.type === 'location');
@@ -127,9 +127,9 @@ function handleMessage(sender_psid, message) {
     // }
 }
 
-function updateStatus(sender_psid, status, message, callback) {
+function updateStatus(sender_psid, status, callback) {
     const query = { user_id: sender_psid };
-    const update = { status: status, content: message };
+    const update = { status: status };
     const options = { upsert: status === GREETING };
 
     ChatStatus.findOneAndUpdate(query, update, options).exec((err, cs) => {
@@ -161,23 +161,35 @@ function callSendAPI(sender_psid, response) {
     });
 }
 
-function handlePostback(sender_psid, received_postback, message) {
+function handlePostback(sender_psid, received_postback) {
     const payload = received_postback.payload;
 
     // Process based on the user answer
     switch (payload) {
         case START_YES:
-            updateStatus(sender_psid, payload, message, handleStartYesPostback);
+            updateStatus(sender_psid, payload, handleStartYesPostback);
             break;
         case START_NO:
-            updateStatus(sender_psid, payload, message, handleStartNoPostback);
+            updateStatus(sender_psid, payload, handleStartNoPostback);
             break;
-        case OVER_1M:
-            updateStatus(sender_psid, payload, message, handleOver1MPostback);
+        case OTHER_HELP_YES:
+            updateStatus(sender_psid, payload, handleOtherHelpPostback);
             break;
+        // case AUSTRALIA_YES:
+        //     updateStatus(sender_psid, payload, handleAustraliaYesPostback);
+        //     break;
+        // case AU_LOC_PROVIDED:
+        //     updateStatus(sender_psid, payload, askForActivityPreference);
+        //     break;
         case GREETING:
-            updateStatus(sender_psid, payload, message, handleGreetingPostback);
+            updateStatus(sender_psid, payload, handleGreetingPostback);
             break;
+        // case PREF_CLEANUP:
+        // case PREF_REVEGETATION:
+        // case PREF_BIO_SURVEY:
+        // case PREF_CANVASSING:
+        //     updatePreference(sender_psid, payload, handlePreferencePostback);
+        //     break;
         default:
             console.log('Cannot differentiate the payload type');
     }
@@ -228,7 +240,7 @@ function handleStartYesPostback(sender_psid) {
                 "content_type": "text",
                 "title": "Over 1M",
                 "payload": OVER_1M
-            },
+            }
             {
                 "content_type": "text",
                 "title": "Less than 1M ",
@@ -241,7 +253,7 @@ function handleStartYesPostback(sender_psid) {
 
 function handleStartNoPostback(sender_psid) {
     const noPayload = {
-        "text": "What's the price of your intended home value?",
+        "text": "That's ok my friend, you can touch me any time!",
         "quick_replies": [
             {
                 "content_type": "text",
@@ -408,17 +420,17 @@ function handleStartNoPostback(sender_psid) {
 //     callSendAPI(sender_psid, campaigns);
 // }
 
-function handleOver1MPostback(sender_psid) {
-    const askForLocationPayload = {
-        "text": "Where about do you live?",
-        "quick_replies": [
-            {
-                "content_type": "location"
-            }
-        ]
-    };
-    callSendAPI(sender_psid, askForLocationPayload);
-}
+// function handleAustraliaYesPostback(sender_psid) {
+//     const askForLocationPayload = {
+//         "text": "Where about do you live?",
+//         "quick_replies": [
+//             {
+//                 "content_type": "location"
+//             }
+//         ]
+//     };
+//     callSendAPI(sender_psid, askForLocationPayload);
+// }
 
 // function handlePreferencePostback(sender_psid, chatStatus) {
 //     console.log('handlePreferencePostback params: ', chatStatus);
