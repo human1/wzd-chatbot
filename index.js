@@ -47,11 +47,11 @@ app.post('/webhook', (req, res) => {
             pageEntry.messaging.forEach((messagingEvent) => {
                 console.log({ messagingEvent });
 
-                var senderId = message.sender.id;
-                if (message.message) {
+                var senderId = messagingEvent.sender.id;
+                if (messagingEvent.message) {
                   // If user send text
-                  if (message.message.text) {
-                    var text = message.message.text;
+                  if (messagingEvent.message.text) {
+                    var text = messagingEvent.message.text;
                     console.log(text); // In tin nhắn người dùng
                     sendMessage(senderId, "Tui là bot đây: " + text);
                   }
