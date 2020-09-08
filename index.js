@@ -83,7 +83,7 @@ app.post('/webhook', (req, res) => {
                         console.log('--------------- message: ');
                         console.log(messagingEvent);
                         // handleMessage(messagingEvent.sender.id, messagingEvent.message);
-                        handlePostback(sender_psid, { payload: GREETING });
+                        handlePostback(messagingEvent.sender.id, { payload: GREETING });
                     }
                 } else {
                     console.log('Webhook received unknown messagingEvent: ', messagingEvent);
