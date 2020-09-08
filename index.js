@@ -1,21 +1,23 @@
 'use strict';
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const START_SEARCH_NO = 'START_SEARCH_NO';
-const START_SEARCH_YES = 'START_SEARCH_YES';
+const START_NO = 'START_NO';
+const START_YES = 'START_YES';
 const GREETING = 'GREETING';
-const AUSTRALIA_YES = 'AUSTRALIA_YES';
-const AU_LOC_PROVIDED = 'AU_LOC_PROVIDED';
-const PREFERENCE_PROVIDED = 'PREFERENCE_PROVIDED';
-const PREF_CLEANUP = 'PREF_CLEANUP';
-const PREF_REVEGETATION = 'PREF_REVEGETATION';
-const PREF_BIO_SURVEY = 'PREF_BIO_SURVEY';
-const PREF_CANVASSING = 'PREF_CANVASSING';
-const AUSTRALIA_NO = 'AUSTRALIA_NO';
+// const AUSTRALIA_YES = 'AUSTRALIA_YES';
+// const AU_LOC_PROVIDED = 'AU_LOC_PROVIDED';
+// const PREFERENCE_PROVIDED = 'PREFERENCE_PROVIDED';
+// const PREF_CLEANUP = 'PREF_CLEANUP';
+// const PREF_REVEGETATION = 'PREF_REVEGETATION';
+// const PREF_BIO_SURVEY = 'PREF_BIO_SURVEY';
+// const PREF_CANVASSING = 'PREF_CANVASSING';
+// const AUSTRALIA_NO = 'AUSTRALIA_NO';
 const OTHER_HELP_YES = 'OTHER_HELP_YES';
+const OVER_1M = 'OVER_1M';
+const LESS_THAN_1M = 'LESS_THAN_1M';
+// const GOOGLE_GEOCODING_API = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
+// const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
-const GOOGLE_GEOCODING_API = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://wizard-dev:wzd-20200908@cluster0.hnr8d.gcp.mongodb.net/wzd-chatbot?retryWrites=true&w=majority';
-const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 
 const
     request = require('request'),
@@ -176,9 +178,9 @@ function handlePostback(sender_psid, received_postback) {
         case START_NO:
             updateStatus(sender_psid, payload, handleStartNoPostback);
             break;
-        case OTHER_HELP_YES:
-            updateStatus(sender_psid, payload, handleOtherHelpPostback);
-            break;
+        // case OTHER_HELP_YES:
+        //     updateStatus(sender_psid, payload, handleOtherHelpPostback);
+        //     break;
         // case AUSTRALIA_YES:
         //     updateStatus(sender_psid, payload, handleAustraliaYesPostback);
         //     break;
@@ -190,10 +192,10 @@ function handlePostback(sender_psid, received_postback) {
             break;
         // case PREF_CLEANUP:
         // case PREF_REVEGETATION:
-        // case PREF_BIO_SURVEY:
-        // case PREF_CANVASSING:
-        //     updatePreference(sender_psid, payload, handlePreferencePostback);
-        //     break;
+        case OVER_1M:
+        case LESS_THAN_1M:
+            updatePreference(sender_psid, payload, handlePreferencePostback);
+            break;
         default:
             console.log('Cannot differentiate the payload type');
     }
@@ -216,7 +218,7 @@ function handleGreetingPostback(sender_psid) {
             const name = bodyObj.first_name;
             greeting = "Hi " + name + "! ";
         }
-        const message = greeting + "How can we help you?";
+        const message = greeting + "Can we save your data if needed?";
         const greetingPayload = {
             "text": message,
             "quick_replies": [
@@ -238,7 +240,7 @@ function handleGreetingPostback(sender_psid) {
 
 function handleStartYesPostback(sender_psid) {
     const yesPayload = {
-        "text": " Ok, How much is your intended home value?",
+        "text": "How much is your intended home value?",
         "quick_replies": [
             {
                 "content_type": "text",
@@ -257,12 +259,11 @@ function handleStartYesPostback(sender_psid) {
 
 function handleStartNoPostback(sender_psid) {
     const noPayload = {
-        "text": "That's ok my friend, you can touch me any time!",
+        "text": "Can we use your data if needed?",
         "quick_replies": [
             {
                 "content_type": "text",
-                "title": "Yes.",
-                "payload": OTHER_HELP_YES
+                "title": "Yes."
             }
         ]
     };
