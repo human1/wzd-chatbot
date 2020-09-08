@@ -14,7 +14,7 @@ const AUSTRALIA_NO = 'AUSTRALIA_NO';
 const OTHER_HELP_YES = 'OTHER_HELP_YES';
 const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
 const GOOGLE_GEOCODING_API = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
-// const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/db_wzd_chatbot';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://wizard-dev:wzd-20200908@cluster0.hnr8d.gcp.mongodb.net/wzd-chatbot?retryWrites=true&w=majority';
 const GOOGLE_GEOCODING_API_KEY = process.env.GOOGLE_GEOCODING_API_KEY;
 
 const
@@ -24,8 +24,13 @@ const
     mongoose = require('mongoose'),
     app = express().use(body_parser.json()); // creates express http server
 
-// var db = mongoose.connect(MONGODB_URI);
-// var ChatStatus = require("./models/chatstatus");
+var db = mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }).then(
+    () => console.log('DB Connected!'))
+    .catch(err => {
+        console.log(`DB Connection Error: ${ err.message }`);
+    });
+
+var ChatStatus = require("./models/chatstatus");
 
 const host = '0.0.0.0';
 const port = process.env.PORT || 1337;
@@ -45,62 +50,41 @@ app.post('/webhook', (req, res) => {
         body.entry.forEach((pageEntry) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((messagingEvent) => {
+                console.log('---------------');
                 console.log({ messagingEvent });
+                console.log('---------------');
+                // There have some button action. Need to handle all of them
+                if (messagingEvent.postback) {
+                    // GREETING - Clicked in button.
+                    console.log('---------------');
+                    console.log('Post back: ' + messagingEvent.postback);
+                    handlePostback(messagingEvent.sender.id, messagingEvent.postback);
+                } else if (messagingEvent.message) {
+                    //
+                    console.log('---------------');
+                    console.log('Postback: ' + messagingEvent.postback + '; message: ' + messagingEvent.message);
+                    if (messagingEvent.message.quick_reply) {
+                        console.log('--------------- Quick reploy: ');
+                        console.log(messagingEvent.message.quick_reply);
 
-                var senderId = messagingEvent.sender.id;
-                if (messagingEvent.message) {
-                  // If user send text
-                  if (messagingEvent.message.text) {
-                    var text = messagingEvent.message.text;
-                    console.log('Process send message back')
-                    console.log(text); // In tin nhắn người dùng
-                    sendMessage(senderId, "Tui là bot đây: " + text);
-                  }
+                        handlePostback(messagingEvent.sender.id, messagingEvent.message.quick_reply);
+                    } else {
+                        console.log('--------------- message: ');
+                        console.log(messagingEvent.message);
+                        handleMessage(messagingEvent.sender.id, messagingEvent.message);
+                    }
+                } else {
+                    console.log(
+                        'Webhook received unknown messagingEvent: ',
+                        messagingEvent
+                    );
                 }
-
-                // if (messagingEvent.postback) {
-                //     // Clicked in button.
-                //     handlePostback(messagingEvent.sender.id, messagingEvent.postback);
-                // } else if (messagingEvent.message) {
-                //     if (messagingEvent.message.quick_reply) {
-                //         handlePostback(messagingEvent.sender.id, messagingEvent.message.quick_reply);
-                //     } else {
-                //         handleMessage(messagingEvent.sender.id, messagingEvent.message);
-                //     }
-                // } else {
-                //     console.log(
-                //         'Webhook received unknown messagingEvent: ',
-                //         messagingEvent
-                //     );
-                // }
             });
         });
     }
 });
 
-// Testing only
-function sendMessage(senderId, message) {
-    const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-    request({
-      url: 'https://graph.facebook.com/v2.6/me/messages',
-      qs: {
-        access_token: PAGE_ACCESS_TOKEN,
-      },
-      method: 'POST',
-      json: {
-        recipient: {
-          id: senderId
-        },
-        message: {
-          text: message
-        },
-      }
-    });
-}
-
-
 app.get('/webhook', (req, res) => {
-
     const VERIFY_TOKEN = process.env.VERIFICATION_TOKEN;
     let mode = req.query['hub.mode'];
     let token = req.query['hub.verify_token'];
@@ -124,9 +108,11 @@ function handleMessage(sender_psid, message) {
     const coordinates = locationAttachment && locationAttachment.payload && locationAttachment.payload.coordinates;
 
     if (coordinates && !isNaN(coordinates.lat) && !isNaN(coordinates.long)) {
+        // User sending location
         handleMessageWithLocationCoordinates(sender_psid, coordinates.lat, coordinates.long);
         return;
     } else if (message.nlp && message.nlp.entities && message.nlp.entities.location && message.nlp.entities.location.find(g => g.confidence > 0.8 && g.suggested)) {
+        //
         const locationName = message.nlp.entities.location.find(loc => loc.confidence > 0.8 && loc.suggested);
         if (locationName.value) {
             const locationNameEncoded = encodeURIComponent(locationName.value);
@@ -134,6 +120,7 @@ function handleMessage(sender_psid, message) {
         }
         return;
     } else if (message.nlp && message.nlp.entities && message.nlp.entities.greetings && message.nlp.entities.greetings.find(g => g.confidence > 0.8 && g.value === 'true')) {
+        // Message only
         handlePostback(sender_psid, { payload: GREETING });
         return;
     }
