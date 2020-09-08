@@ -165,6 +165,9 @@ function callSendAPI(sender_psid, response) {
 function handlePostback(sender_psid, received_postback) {
     const payload = received_postback.payload;
 
+    console.log('handlePostback');
+    console.log(payload);
+
     // Process based on the user answer
     switch (payload) {
         case START_YES:
