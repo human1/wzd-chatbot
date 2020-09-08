@@ -95,35 +95,35 @@ app.post('/webhook', (req, res) => {
 });
 
 // function handleMessage(sender_psid, message) {
-    // const locationAttachment = message && message.attachments && message.attachments.find(a => a.type === 'location');
-    // const coordinates = locationAttachment && locationAttachment.payload && locationAttachment.payload.coordinates;
+// const locationAttachment = message && message.attachments && message.attachments.find(a => a.type === 'location');
+// const coordinates = locationAttachment && locationAttachment.payload && locationAttachment.payload.coordinates;
 
-    // if (coordinates && !isNaN(coordinates.lat) && !isNaN(coordinates.long)) {
-    //     // User sending location
-    //     console.log('********* coordinates');
-    //     console.log(coordinates)
-    //     console.log('*********');
-    //     handleMessageWithLocationCoordinates(sender_psid, coordinates.lat, coordinates.long);
-    //     return;
-    // } else if (message.nlp && message.nlp.entities && message.nlp.entities.location && message.nlp.entities.location.find(g => g.confidence > 0.8 && g.suggested)) {
-    //     //
-    //     const locationName = message.nlp.entities.location.find(loc => loc.confidence > 0.8 && loc.suggested);
-    //     console.log('********* 2nd locationName');
-    //     console.log(locationName)
-    //     console.log('*********');
-    //     if (locationName.value) {
-    //         const locationNameEncoded = encodeURIComponent(locationName.value);
-    //         callGeocodingApi(locationNameEncoded, sender_psid, handleConfirmLocation);
-    //     }
-    //     return;
-    // } else if (message.nlp && message.nlp.entities && message.nlp.entities.greetings && message.nlp.entities.greetings.find(g => g.confidence > 0.8 && g.value === 'true')) {
-    //     // Message only
-    //     console.log('********* GREETING');
-    //     console.log()
-    //     console.log('*********');
-    //     handlePostback(sender_psid, { payload: GREETING });
-    //     return;
-    // }
+// if (coordinates && !isNaN(coordinates.lat) && !isNaN(coordinates.long)) {
+//     // User sending location
+//     console.log('********* coordinates');
+//     console.log(coordinates)
+//     console.log('*********');
+//     handleMessageWithLocationCoordinates(sender_psid, coordinates.lat, coordinates.long);
+//     return;
+// } else if (message.nlp && message.nlp.entities && message.nlp.entities.location && message.nlp.entities.location.find(g => g.confidence > 0.8 && g.suggested)) {
+//     //
+//     const locationName = message.nlp.entities.location.find(loc => loc.confidence > 0.8 && loc.suggested);
+//     console.log('********* 2nd locationName');
+//     console.log(locationName)
+//     console.log('*********');
+//     if (locationName.value) {
+//         const locationNameEncoded = encodeURIComponent(locationName.value);
+//         callGeocodingApi(locationNameEncoded, sender_psid, handleConfirmLocation);
+//     }
+//     return;
+// } else if (message.nlp && message.nlp.entities && message.nlp.entities.greetings && message.nlp.entities.greetings.find(g => g.confidence > 0.8 && g.value === 'true')) {
+//     // Message only
+//     console.log('********* GREETING');
+//     console.log()
+//     console.log('*********');
+//     handlePostback(sender_psid, { payload: GREETING });
+//     return;
+// }
 // }
 
 function updateStatus(sender_psid, status, callback) {
@@ -254,9 +254,9 @@ function handleStartYesPostback(sender_psid) {
 }
 
 function showAllData(sender_psid) {
-    const listData = ChatStatus.find( {} );
+    const listData = ChatStatus.findById({})
     const noPayload = {
-        "text": JSON.stringify(listData),
+        "text": listData,
     };
     callSendAPI(sender_psid, noPayload);
 }
