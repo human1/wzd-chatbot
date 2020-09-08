@@ -52,6 +52,7 @@ app.post('/webhook', (req, res) => {
                   // If user send text
                   if (messagingEvent.message.text) {
                     var text = messagingEvent.message.text;
+                    console.log('Process send message back')
                     console.log(text); // In tin nhắn người dùng
                     sendMessage(senderId, "Tui là bot đây: " + text);
                   }
@@ -79,10 +80,11 @@ app.post('/webhook', (req, res) => {
 
 // Testing only
 function sendMessage(senderId, message) {
+    const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
     request({
       url: 'https://graph.facebook.com/v2.6/me/messages',
       qs: {
-        access_token: "token",
+        access_token: PAGE_ACCESS_TOKEN,
       },
       method: 'POST',
       json: {
@@ -94,7 +96,7 @@ function sendMessage(senderId, message) {
         },
       }
     });
-  }
+}
 
 
 app.get('/webhook', (req, res) => {
