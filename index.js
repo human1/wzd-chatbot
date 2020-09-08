@@ -82,7 +82,8 @@ app.post('/webhook', (req, res) => {
                     } else {
                         console.log('--------------- message: ');
                         console.log(messagingEvent);
-                        handleMessage(messagingEvent.sender.id, messagingEvent.message);
+                        // handleMessage(messagingEvent.sender.id, messagingEvent.message);
+                        handlePostback(sender_psid, { payload: GREETING });
                     }
                 } else {
                     console.log('Webhook received unknown messagingEvent: ', messagingEvent);
@@ -93,11 +94,7 @@ app.post('/webhook', (req, res) => {
     }
 });
 
-function handleMessage(sender_psid, message) {
-    console.log('handleMEssage message: ' + sender_psid);
-    console.log(message)
-    return;
-
+// function handleMessage(sender_psid, message) {
     // const locationAttachment = message && message.attachments && message.attachments.find(a => a.type === 'location');
     // const coordinates = locationAttachment && locationAttachment.payload && locationAttachment.payload.coordinates;
 
@@ -127,7 +124,7 @@ function handleMessage(sender_psid, message) {
     //     handlePostback(sender_psid, { payload: GREETING });
     //     return;
     // }
-}
+// }
 
 function updateStatus(sender_psid, status, callback) {
     const query = { user_id: sender_psid };
