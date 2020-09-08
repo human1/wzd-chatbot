@@ -172,7 +172,7 @@ function handlePostback(sender_psid, received_postback) {
             updateStatus(sender_psid, payload, handleStartYesPostback);
             break;
         case START_NO:
-            updateStatus(sender_psid, payload, showAllData);
+            updateStatus(sender_psid, payload, handleStartNoPostback);
             break;
         // case OTHER_HELP_YES:
         //     updateStatus(sender_psid, payload, handleOtherHelpPostback);
@@ -256,7 +256,7 @@ function handleStartYesPostback(sender_psid) {
 function showAllData(sender_psid) {
     const listData = ChatStatus.find( {} );
     const noPayload = {
-        "text": listData,
+        "text": JSON.stringify(listData),
     };
     callSendAPI(sender_psid, noPayload);
 }
