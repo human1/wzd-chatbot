@@ -50,9 +50,9 @@ app.post('/webhook', (req, res) => {
         body.entry.forEach((pageEntry) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((messagingEvent) => {
-                console.log('---------------');
+                console.log('===============');
                 console.log({ messagingEvent });
-                console.log('---------------');
+                console.log('===============');
                 // There have some button action. Need to handle all of them
                 if (messagingEvent.postback) {
                     // GREETING - Clicked in button.
@@ -62,7 +62,8 @@ app.post('/webhook', (req, res) => {
                 } else if (messagingEvent.message) {
                     //
                     console.log('---------------');
-                    console.log('Postback: ' + messagingEvent.postback + '; message: ' + messagingEvent.message);
+                    console.log('message: ');
+                    console.log(messagingEvent.message)
                     if (messagingEvent.message.quick_reply) {
                         console.log('--------------- Quick reploy: ');
                         console.log(messagingEvent.message.quick_reply);
@@ -109,11 +110,17 @@ function handleMessage(sender_psid, message) {
 
     if (coordinates && !isNaN(coordinates.lat) && !isNaN(coordinates.long)) {
         // User sending location
+        console.log('********* coordinates');
+        console.log(coordinates)
+        console.log('*********');
         handleMessageWithLocationCoordinates(sender_psid, coordinates.lat, coordinates.long);
         return;
     } else if (message.nlp && message.nlp.entities && message.nlp.entities.location && message.nlp.entities.location.find(g => g.confidence > 0.8 && g.suggested)) {
         //
         const locationName = message.nlp.entities.location.find(loc => loc.confidence > 0.8 && loc.suggested);
+        console.log('********* 2nd locationName');
+        console.log(locationName)
+        console.log('*********');
         if (locationName.value) {
             const locationNameEncoded = encodeURIComponent(locationName.value);
             callGeocodingApi(locationNameEncoded, sender_psid, handleConfirmLocation);
@@ -121,6 +128,9 @@ function handleMessage(sender_psid, message) {
         return;
     } else if (message.nlp && message.nlp.entities && message.nlp.entities.greetings && message.nlp.entities.greetings.find(g => g.confidence > 0.8 && g.value === 'true')) {
         // Message only
+        console.log('********* GREETING');
+        console.log()
+        console.log('*********');
         handlePostback(sender_psid, { payload: GREETING });
         return;
     }
