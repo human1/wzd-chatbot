@@ -240,7 +240,7 @@ function handleStartYesPostback(sender_psid) {
                 "content_type": "text",
                 "title": "Over 1M",
                 "payload": OVER_1M
-            }
+            },
             {
                 "content_type": "text",
                 "title": "Less than 1M ",
