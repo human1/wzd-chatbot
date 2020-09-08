@@ -86,7 +86,7 @@ app.post('/webhook', (req, res) => {
                     }
                 } else {
                     console.log('Webhook received unknown messagingEvent: ', messagingEvent);
-                    // handleMessage(messagingEvent.sender.id, messagingEvent.message);
+                    handlePostback(sender_psid, { payload: GREETING });
                 }
             });
         });
@@ -96,7 +96,6 @@ app.post('/webhook', (req, res) => {
 function handleMessage(sender_psid, message) {
     console.log('handleMEssage message: ' + sender_psid);
     console.log(message)
-    handlePostback(sender_psid, { payload: GREETING });
     return;
 
     // const locationAttachment = message && message.attachments && message.attachments.find(a => a.type === 'location');
