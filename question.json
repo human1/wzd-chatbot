@@ -1,0 +1,10 @@
+[
+    {
+      "id": 1,
+      "question": "How much is your intended home value?"
+    },
+    {
+      "id": 2,
+      "question": "What's the price of your intended home value?"
+    }
+]
