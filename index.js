@@ -29,8 +29,31 @@ const port = process.env.PORT || 1337;
 
 app.listen(port, host, () => console.log('webhook is listening at port: ' + port));
 
+// optionally store this in a database
+const users = {}
+
+// an object of state constants
+const states = {
+    question1: 'question1',
+    question2: 'question2',
+    closing: 'closing',
+}
+
+// mapping of each to state to the message associated with each state
+const messages = {
+    [states.question1]: 'How are you today?',
+    [states.question2]: 'Where are you from?',
+    [states.closing]: 'That\'s cool. It\'s nice to meet you!',
+}
+
+// mapping of each state to the next state
+const nextStates = {
+    [states.question1]: states.question2,
+    [states.question2]: states.closing,
+}
+
 app.get('/webhook', (req, res) => {
-    const VERIFY_TOKEN = process.env.VERIFICATION_TOKEN;
+    const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'EAAFVCXifkIkBAMl1TUueixS6CkypIbwBrOPl9VxghpkPfkMTmHkKl2a3L0ydRpUedMDbgcGKwRZCf0VZCzwinBkdSUYyS0jQkMttaKMEeoX4lPFZAbhlklE1bg9wygFnuBVea8LqRwpDFnahAHgFzZCMydjuISe0cpXOpmFJFgZDZD';
     let mode = req.query['hub.mode'];
     let token = req.query['hub.verify_token'];
     let challenge = req.query['hub.challenge'];
@@ -55,42 +78,31 @@ app.post('/webhook', (req, res) => {
         }
         body.entry.forEach((pageEntry) => {
             // Iterate over each messaging event and handle accordingly
-            pageEntry.messaging.forEach((messagingEvent) => {
-                // There have some button action. Need to handle all of them
-                if (messagingEvent.postback) {
-                    handlePostback(messagingEvent.sender.id, messagingEvent.postback);
-                } else if (messagingEvent.message) {
-                    if (messagingEvent.message.quick_reply) {
-                        handlePostback(messagingEvent.sender.id, messagingEvent.message.quick_reply);
-                    } else {
-                        handlePostback(messagingEvent.sender.id, { payload: GREETING });
-                    }
+            pageEntry.messaging.forEach((event) => {
+                // keep track of each user by their senderId
+                const senderId = event.sender.id
+                if (!users[senderId].currentState){
+                    // set the initial state
+                    users[senderId].currentState = states.question1
                 } else {
-                    console.log('Webhook received unknown messagingEvent: ', messagingEvent);
+                    // store the answer and update the state
+                    users[senderId][users[senderId].currentState] = event.message.text
+                    users[senderId].currentState = nextStates[users[senderId.currentState]]
                 }
+                // send a message to the user via the Messenger API
+                sendTextMessage(senderId, messages[users[senderId].currentState])
             });
         });
     }
 });
 
-function updateStatus(sender_psid, status, callback) {
-    const query = { user_id: sender_psid };
-    const update = { status: status };
-    const options = { upsert: status === GREETING };
-
-    ChatStatus.findOneAndUpdate(query, update, options).exec((err, cs) => {
-        console.log('update status to db: ', cs);
-        callback(sender_psid);
-    });
-}
-
-function callSendAPI(sender_psid, response) {
-    console.log('message to be sent: ', response);
+function sendTextMessage(sender_psid, message) {
+    console.log('message to be sent: ', message);
     let request_body = {
         "recipient": {
             "id": sender_psid
         },
-        "message": response
+        "message": message
     }
 
     // Send the HTTP request to the Messenger Platform
@@ -105,94 +117,4 @@ function callSendAPI(sender_psid, response) {
             console.error("Unable to send message:", err);
         }
     });
-}
-
-function handlePostback(sender_psid, received_postback) {
-    const payload = received_postback.payload;
-
-    console.log('handlePostback');
-    console.log(payload);
-
-    // Process based on the user answer
-    switch (payload) {
-        case START_YES:
-            updateStatus(sender_psid, payload, handleStartYesPostback);
-            break;
-        case START_NO:
-            updateStatus(sender_psid, payload, handleStartNoPostback);
-            break;
-        case GREETING:
-            updateStatus(sender_psid, payload, handleGreetingPostback);
-            break;
-        case OVER_1M:
-        case LESS_THAN_1M:
-            updateStatus(sender_psid, payload, showAllData);
-            break;
-        default:
-            console.log('Cannot differentiate the payload type');
-    }
-}
-
-function handleGreetingPostback(sender_psid) {
-    request({
-        url: `${FACEBOOK_GRAPH_API_BASE_URL}${sender_psid}`,
-        qs: {
-            access_token: process.env.PAGE_ACCESS_TOKEN,
-            fields: "first_name"
-        },
-        method: "GET"
-    }, function (error, response, body) {
-        var greeting = "";
-        if (error) {
-            console.log("Error getting user's name: " + error);
-        } else {
-            var bodyObj = JSON.parse(body);
-            const name = bodyObj.first_name;
-            greeting = "Hi " + name + "! ";
-        }
-        const message = greeting + "Can we save your data if needed?";
-        const greetingPayload = {
-            "text": message,
-            "quick_replies": [
-                {
-                    "content_type": "text",
-                    "title": "Yes, I need your help!",
-                    "payload": START_YES
-                },
-                {
-                    "content_type": "text",
-                    "title": "No, thanks.",
-                    "payload": START_NO
-                }
-            ]
-        };
-        callSendAPI(sender_psid, greetingPayload);
-    });
-}
-
-function handleStartYesPostback(sender_psid) {
-    const yesPayload = {
-        "text": "How much is your intended home value?",
-        "quick_replies": [
-            {
-                "content_type": "text",
-                "title": "Over 1M",
-                "payload": OVER_1M
-            },
-            {
-                "content_type": "text",
-                "title": "Less than 1M ",
-                "payload": LESS_THAN_1M
-            }
-        ]
-    };
-    callSendAPI(sender_psid, yesPayload);
-}
-
-function showAllData(sender_psid) {
-    const listData = ChatStatus.findById({})
-    const noPayload = {
-        "text": listData,
-    };
-    callSendAPI(sender_psid, noPayload);
 }
