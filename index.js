@@ -84,8 +84,7 @@ app.post('/webhook', (req, res) => {
 
                 // keep track of each user by their senderId
                 const senderId = event.sender.id
-                if (!users || !users[senderId].currentState) {
-                    users = {};
+                if (!users[senderId] || !users[senderId].currentState) {
                     users.senderId.currentState = states.question1
                     // set the initial state
                     // users[senderId].currentState = states.question1
