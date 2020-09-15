@@ -83,19 +83,11 @@ app.post('/webhook', (req, res) => {
                 if (!users[senderId] || !users[senderId].currentState) {
                     users[senderId] = {};
                     users[senderId].currentState = states.question1;
-                    console.log('--')
-                    console.log(users);
-                    console.log(states);
-                    console.log('--')
                 } else {
                     // store the answer and update the state
                     users[senderId][users[senderId].currentState] = event.message.text
                     users[senderId].currentState = nextStates[users[senderId.currentState]]
                 }
-
-                console.log('=============');
-                console.log(users);
-                console.log('=============');
                 // send a message to the user via the Messenger API
                 sendTextMessage(senderId, messages[users[senderId].currentState])
             });
@@ -104,18 +96,18 @@ app.post('/webhook', (req, res) => {
 });
 
 function sendTextMessage(sender_psid, message) {
-    console.log('message to be sent: ', message);
     let request_body = {
         "recipient": {
             "id": sender_psid
         },
         "message": message
     }
+    console.log('message to be sent: ', request_body);
 
     // Send the HTTP request to the Messenger Platform
     request({
         "url": `${FACEBOOK_GRAPH_API_BASE_URL}me/messages`,
-        "qs": { "access_token": PAGE_ACCESS_TOKEN },
+        "qs": { "access_token": PAGE_ACCESS_TOKEN || 'EAAFVCXifkIkBAEsOSHyiHYEYg0xmjzQ1S6973ZCZCISwZB8cH4Wuxzko9knRpiZAZCZCq1TtfOOThunj57AYyBVgFFrefr2otlhxCCIv5dpry9U9es7Ry7yQ8svxxaiyVAkVKJMG0Np94RBNB643AbMGeahpLRiMWSHTA68StagQZDZD' },
         "method": "POST",
         "json": request_body
     }, (err, res, body) => {
