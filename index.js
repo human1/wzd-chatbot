@@ -92,7 +92,7 @@ app.post('/webhook', (req, res) => {
                 const _message = messages[users[senderId].currentState];
                 if (_message) {
                     sendTextMessage(senderId, _message);
-                    // Save to API
+                    // Save to API.
                 }
             });
         });
