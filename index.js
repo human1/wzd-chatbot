@@ -94,7 +94,9 @@ app.post('/webhook', (req, res) => {
                 }
                 console.log('4');
                 // send a message to the user via the Messenger API
-                // sendTextMessage(senderId, messages[users[senderId].currentState])
+                if (messages[users[senderId].currentState]) {
+                    sendTextMessage(senderId, messages[users[senderId].currentState])
+                }
             });
         });
     }
