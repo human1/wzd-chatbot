@@ -34,15 +34,15 @@ const users = {}
 
 // an object of state constants
 const states = {
-    question1: 'question1',
-    question2: 'question2',
+    question1: 'qid_1',
+    question2: 'qid_2',
     closing: 'closing',
 }
 
 // mapping of each to state to the message associated with each state
 const messages = {
-    [states.question1]: 'How are you today?',
-    [states.question2]: 'Where are you from?',
+    [states.question1]: 'How much is your intended home value?',
+    [states.question2]: 'What\'s the price of your intended home value?',
     [states.closing]: 'That\'s cool. It\'s nice to meet you!',
 }
 
@@ -79,26 +79,20 @@ app.post('/webhook', (req, res) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
                 // keep track of each user by their senderId
-                console.log('1');
                 const senderId = event.sender.id
                 if (!users[senderId] || !users[senderId].currentState) {
-                    console.log('2');
                     users[senderId] = {};
                     users[senderId].currentState = states.question1;
                 } else {
                     // store the answer and update the state
-                    users[senderId][users[senderId].currentState] = event.message.text
-                    users[senderId].currentState = nextStates[users[senderId].currentState]
-                    console.log("3 =====");
-                    console.log(users);
-                    console.log(event)
-                    console.log(nextStates)
-                    console.log("=====");
+                    users[senderId][users[senderId].currentState] = event.message.text;
+                    users[senderId].currentState = nextStates[users[senderId].currentState];
                 }
-                console.log('4');
                 // send a message to the user via the Messenger API
-                if (messages[users[senderId].currentState]) {
-                    sendTextMessage(senderId, messages[users[senderId].currentState])
+                const _message = messages[users[senderId].currentState];
+                if (_message) {
+                    sendTextMessage(senderId, _message);
+                    // Save to API
                 }
             });
         });
@@ -114,7 +108,6 @@ function sendTextMessage(sender_psid, message) {
             "text": message
         }
     }
-    console.log('message to be sent: ', request_body);
 
     // Send the HTTP request to the Messenger Platform
     request({
