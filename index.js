@@ -89,10 +89,10 @@ app.post('/webhook', (req, res) => {
                     console.log("3 =====");
                     console.log(users);
                     // store the answer and update the state
-                    if (event.message) {
+                    
                         users[senderId][users[senderId].currentState] = event.message.text
                         users[senderId].currentState = nextStates[users[senderId.currentState]]
-                    }
+                    
                 }
                 console.log('4');
                 // send a message to the user via the Messenger API
