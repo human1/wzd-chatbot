@@ -100,7 +100,9 @@ function sendTextMessage(sender_psid, message) {
         "recipient": {
             "id": sender_psid
         },
-        "message": message
+        "message": { 
+            "text": message
+        }
     }
     console.log('message to be sent: ', request_body);
 
