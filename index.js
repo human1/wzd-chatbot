@@ -82,7 +82,11 @@ app.post('/webhook', (req, res) => {
                 const senderId = event.sender.id
                 if (!users[senderId] || !users[senderId].currentState) {
                     users[senderId] = {};
-                    users[senderId].currentState = states.question1
+                    users[senderId].currentState = states.question1;
+                    console.log('--')
+                    console.log(users);
+                    console.log(states);
+                    console.log('--')
                 } else {
                     // store the answer and update the state
                     users[senderId][users[senderId].currentState] = event.message.text
@@ -91,6 +95,7 @@ app.post('/webhook', (req, res) => {
 
                 console.log('=============');
                 console.log(users);
+                console.log('=============');
                 // send a message to the user via the Messenger API
                 sendTextMessage(senderId, messages[users[senderId].currentState])
             });
