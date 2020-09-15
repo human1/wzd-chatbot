@@ -84,6 +84,8 @@ app.post('/webhook', (req, res) => {
                     users[senderId] = {};
                     users[senderId].currentState = states.question1;
                 } else {
+                    console.log("=====");
+                    console.log(users);
                     // store the answer and update the state
                     users[senderId][users[senderId].currentState] = event.message.text
                     users[senderId].currentState = nextStates[users[senderId.currentState]]
