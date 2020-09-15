@@ -58,14 +58,7 @@ app.get('/webhook', (req, res) => {
     let token = req.query['hub.verify_token'];
     let challenge = req.query['hub.challenge'];
 
-
-    console.log('111');
-    console.log(token);
-
     if (mode && token) {
-        console.log('22');
-        console.log(VERIFY_TOKEN);
-
         if (mode === 'subscribe' && token === VERIFY_TOKEN) {
             console.log('WEBHOOK_VERIFIED');
             res.status(200).send(challenge);
@@ -78,7 +71,6 @@ app.get('/webhook', (req, res) => {
 app.post('/webhook', (req, res) => {
     res.status(200).send('EVENT_RECEIVED');
     const body = req.body;
-    console.log('possstttt ')
     if (body.object === 'page') {
         if (body.entry && body.entry.length <= 0) {
             return;
@@ -86,13 +78,17 @@ app.post('/webhook', (req, res) => {
         body.entry.forEach((pageEntry) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
-                console.log('evenntt');
-                console.log(event);
+                
+                console.log('=============');
+                console.log(users);
+
                 // keep track of each user by their senderId
                 const senderId = event.sender.id
-                if (!users[senderId].currentState) {
+                if (!users || !users[senderId].currentState) {
+                    users = {};
+                    users.senderId.currentState = states.question1
                     // set the initial state
-                    users[senderId].currentState = states.question1
+                    // users[senderId].currentState = states.question1
                 } else {
                     // store the answer and update the state
                     users[senderId][users[senderId].currentState] = event.message.text
