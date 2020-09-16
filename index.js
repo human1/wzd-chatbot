@@ -32,18 +32,18 @@ app.listen(port, host, () => console.log('webhook is listening at port: ' + port
 // optionally store this in a database
 const users = {}
 
-// an object of state constants
+// mapping of each to state to the message associated with each state
+const questionList = {
+    [states.question1]: 'How much is your intended home value?',
+    [states.question2]: 'What\'s the price of your intended home value?',
+    [states.closing]: 'That\'s cool. It\'s nice to meet you!',
+}
+
+// an object of state constants. Store id and state closing.
 const states = {
     question1: 'qid_1',
     question2: 'qid_2',
     closing: 'closing',
-}
-
-// mapping of each to state to the message associated with each state
-const messages = {
-    [states.question1]: 'How much is your intended home value?',
-    [states.question2]: 'What\'s the price of your intended home value?',
-    [states.closing]: 'That\'s cool. It\'s nice to meet you!',
 }
 
 // mapping of each state to the next state
@@ -85,19 +85,19 @@ app.post('/webhook', (req, res) => {
                     users[senderId].currentState = states.question1;
                 } else {
                     // store the answer and update the state
-                    users[senderId][users[senderId].currentState] = event.message.text;
+                    users[senderId].answer = event.message.text;
                     users[senderId].currentState = nextStates[users[senderId].currentState];
                 }
                 // send a message to the user via the Messenger API
                 console.log('----');
                 console.log(users);
-                console.log(users[senderId][users[senderId].currentState]);
+                console.log(users[senderId].answer);
                 console.log('-----');
-                const _message = messages[users[senderId].currentState];
-                if (_message) {
-                    sendTextMessage(senderId, _message);
+                const _question = questionList[users[senderId].currentState];
+                if (_question) {
+                    sendTextMessage(senderId, _question);
                     // Save to API.
-                    // collectData(senderId, "", _message, , "");
+                    // collectData(senderId, "", _question, users[senderId].answer, "");
                 }
             });
         });
