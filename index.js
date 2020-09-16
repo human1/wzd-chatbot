@@ -126,8 +126,8 @@ function connectWithBackend(fbid, _question) {
     }, (err, res, body) => {
         console.log('--- Connect with BE success!');
         console.log(body);
-        sendTextMessage(senderId, _question);
-        collectData(senderId, "", _question, users[senderId].answer, "");
+        sendTextMessage(fbid, _question);
+        collectData(fbid, "", _question, users[senderId].answer, "");
         if (err) {
             console.error("Unable to Connect with BE:", err);
         }
