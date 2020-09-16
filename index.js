@@ -88,6 +88,7 @@ app.post('/webhook', (req, res) => {
                 if (_question) {
                     sendTextMessage(senderId, _question);
                     // Save to API.
+                    verifyWithBackend(senderId);
                     collectData(senderId, "", _question, users[senderId].answer, "");
                 }
             });
@@ -117,6 +118,17 @@ function sendTextMessage(sender_psid, message) {
             console.error("Unable to send message:", err);
         }
     });
+}
+
+function verifyWithBackend(fbid) {
+    request.get(
+        'https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/' + fbid,
+        function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log(body);
+            }
+        }
+    );
 }
 
 function collectData(fbid, username, question, answer, key) {
