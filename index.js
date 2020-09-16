@@ -93,6 +93,8 @@ app.post('/webhook', (req, res) => {
                 if (_message) {
                     sendTextMessage(senderId, _message);
                     // Save to API.
+                    console.log(users[senderId][users[senderId].currentState]);
+                    // collectData(senderId, "", _message, , "");
                 }
             });
         });
@@ -121,4 +123,24 @@ function sendTextMessage(sender_psid, message) {
             console.error("Unable to send message:", err);
         }
     });
+}
+
+function collectData(fbid, username, question, answer, key) {
+    const params = {
+        "fbid": fbid,
+        "username": username,
+        "question": question,
+        "answer": answer,
+        "key": key,
+    };
+
+    request.post(
+        'https://dev-mainapi.siroloan.com/api/public/v1/chatbot/collect',
+        params,
+        function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log(body);
+            }
+        }
+    );
 }
