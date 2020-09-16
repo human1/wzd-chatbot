@@ -119,23 +119,24 @@ function sendTextMessage(sender_psid, message) {
 }
 
 function connectWithBackend(fbid, _question) {
-    console.log('Process login/connect with BE')
-    request.get(
-        'https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/' + fbid,
-        function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                console.log('--- Connect with BE success!');
-                console.log(body);
-                sendTextMessage(senderId, _question);
-                collectData(senderId, "", _question, users[senderId].answer, "");
-            }
+    console.log('Process login/connect with BE');
+    request({
+        "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
+        "method": "GET",
+    }, (err, res, body) => {
+        console.log('--- Connect with BE success!');
+        console.log(body);
+        sendTextMessage(senderId, _question);
+        collectData(senderId, "", _question, users[senderId].answer, "");
+        if (err) {
+            console.error("Unable to Connect with BE:", err);
         }
-    );
+    });
 }
 
 function collectData(fbid, username, question, answer, key) {
     console.log('Process collect data')
-    const params = {
+    const request_body = {
         "fbid": fbid,
         "username": username,
         "question": question,
@@ -143,13 +144,15 @@ function collectData(fbid, username, question, answer, key) {
         "key": key,
     };
 
-    request.post(
-        'https://dev-mainapi.siroloan.com/api/public/v1/chatbot/collect',
-        params,
-        function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                console.log(body);
-            }
+    // Send the HTTP request to the Messenger Platform
+    request({
+        "url": 'https://dev-mainapi.siroloan.com/api/public/v1/chatbot/collect',
+        "method": "POST",
+        "json": request_body
+    }, (err, res, body) => {
+        console.log("Collected data:", body);
+        if (err) {
+            console.error("Unable to collect:", err);
         }
-    );
+    });
 }
