@@ -6,20 +6,10 @@ const
     request = require('request'),
     express = require('express'),
     body_parser = require('body-parser'),
-    mongoose = require('mongoose'),
-    app = express().use(body_parser.json()); // creates express http server
+    app = express().use(body_parser.json());
 
-// TODO - will remove this after confirm the Json is working and don't need the Mongo DB
-//const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://wizard-dev:wzd-20200908@cluster0.hnr8d.gcp.mongodb.net/wzd-chatbot?retryWrites=true&w=majority';
-// var db = mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }).then(
-//     () => console.log('DB Connected!'))
-//     .catch(err => {
-//         console.log(`DB Connection Error: ${err.message}`);
-//     });
-// var ChatStatus = require("./models/chatstatus");
-
-const host = '0.0.0.0';
-const port = process.env.PORT || 1337;
+const host = process.env.HOST;
+const port = process.env.PORT;
 
 app.listen(port, host, () => console.log('webhook is listening at port: ' + port));
 
@@ -39,6 +29,11 @@ const nextStates = {
     [states.question2]: states.closing,
 }
 
+const keys = {
+    [states.question1]: 'propertyValue',
+    [states.question2]: 'propertyValue',
+}
+
 // mapping of each to state to the message associated with each state
 const questionList = {
     [states.question1]: 'How much is your intended home value?',
@@ -47,7 +42,7 @@ const questionList = {
 }
 
 app.get('/webhook', (req, res) => {
-    const VERIFY_TOKEN = process.env.VERIFY_TOKEN || '8cc5b87fa1dca8b34622499f2039dde0';
+    const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
     let mode = req.query['hub.mode'];
     let token = req.query['hub.verify_token'];
     let challenge = req.query['hub.challenge'];
@@ -85,9 +80,10 @@ app.post('/webhook', (req, res) => {
                 }
                 // send a message to the user via the Messenger API
                 const _question = questionList[users[senderId].currentState];
+                const _key = keys[users[senderId].currentState];
                 if (_question) {
                     // Process with BE
-                    connectWithBackend(senderId, _question);
+                    connectWithBackend(senderId, _question, _key);
                 }
             });
         });
@@ -107,7 +103,7 @@ function sendTextMessage(sender_psid, message) {
     // Send the HTTP request to the Messenger Platform
     request({
         "url": `${FACEBOOK_GRAPH_API_BASE_URL}me/messages`,
-        "qs": { "access_token": PAGE_ACCESS_TOKEN || 'EAAFVCXifkIkBAEsOSHyiHYEYg0xmjzQ1S6973ZCZCISwZB8cH4Wuxzko9knRpiZAZCZCq1TtfOOThunj57AYyBVgFFrefr2otlhxCCIv5dpry9U9es7Ry7yQ8svxxaiyVAkVKJMG0Np94RBNB643AbMGeahpLRiMWSHTA68StagQZDZD' },
+        "qs": { "access_token": PAGE_ACCESS_TOKEN },
         "method": "POST",
         "json": request_body
     }, (err, res, body) => {
@@ -118,7 +114,7 @@ function sendTextMessage(sender_psid, message) {
     });
 }
 
-function connectWithBackend(fbid, _question) {
+function connectWithBackend(fbid, _question, _key) {
     console.log('Process login/connect with BE');
     request({
         "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
@@ -127,7 +123,7 @@ function connectWithBackend(fbid, _question) {
         console.log('--- Connect with BE success!');
         console.log(body);
         sendTextMessage(fbid, _question);
-        collectData(fbid, "", _question, users[fbid].answer, "");
+        collectData(fbid, "", _question, users[fbid].answer, _key);
         if (err) {
             console.error("Unable to Connect with BE:", err);
         }
