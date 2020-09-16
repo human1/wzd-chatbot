@@ -1,13 +1,6 @@
 'use strict';
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const START_NO = 'START_NO';
-const START_YES = 'START_YES';
-const GREETING = 'GREETING';
-const OTHER_HELP_YES = 'OTHER_HELP_YES';
-const OVER_1M = 'OVER_1M';
-const LESS_THAN_1M = 'LESS_THAN_1M';
 const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://wizard-dev:wzd-20200908@cluster0.hnr8d.gcp.mongodb.net/wzd-chatbot?retryWrites=true&w=majority';
 
 const
     request = require('request'),
@@ -16,13 +9,14 @@ const
     mongoose = require('mongoose'),
     app = express().use(body_parser.json()); // creates express http server
 
-var db = mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }).then(
-    () => console.log('DB Connected!'))
-    .catch(err => {
-        console.log(`DB Connection Error: ${err.message}`);
-    });
-
-var ChatStatus = require("./models/chatstatus");
+// TODO - will remove this after confirm the Json is working and don't need the Mongo DB
+//const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://wizard-dev:wzd-20200908@cluster0.hnr8d.gcp.mongodb.net/wzd-chatbot?retryWrites=true&w=majority';
+// var db = mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }).then(
+//     () => console.log('DB Connected!'))
+//     .catch(err => {
+//         console.log(`DB Connection Error: ${err.message}`);
+//     });
+// var ChatStatus = require("./models/chatstatus");
 
 const host = '0.0.0.0';
 const port = process.env.PORT || 1337;
