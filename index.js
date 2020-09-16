@@ -89,11 +89,14 @@ app.post('/webhook', (req, res) => {
                     users[senderId].currentState = nextStates[users[senderId].currentState];
                 }
                 // send a message to the user via the Messenger API
+                console.log('----');
+                console.log(users);
+                console.log(users[senderId][users[senderId].currentState]);
+                console.log('-----');
                 const _message = messages[users[senderId].currentState];
                 if (_message) {
                     sendTextMessage(senderId, _message);
                     // Save to API.
-                    console.log(users[senderId][users[senderId].currentState]);
                     // collectData(senderId, "", _message, , "");
                 }
             });
