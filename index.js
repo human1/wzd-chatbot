@@ -32,13 +32,6 @@ app.listen(port, host, () => console.log('webhook is listening at port: ' + port
 // optionally store this in a database
 const users = {}
 
-// mapping of each to state to the message associated with each state
-const questionList = {
-    [states.question1]: 'How much is your intended home value?',
-    [states.question2]: 'What\'s the price of your intended home value?',
-    [states.closing]: 'That\'s cool. It\'s nice to meet you!',
-}
-
 // an object of state constants. Store id and state closing.
 const states = {
     question1: 'qid_1',
@@ -50,6 +43,13 @@ const states = {
 const nextStates = {
     [states.question1]: states.question2,
     [states.question2]: states.closing,
+}
+
+// mapping of each to state to the message associated with each state
+const questionList = {
+    [states.question1]: 'How much is your intended home value?',
+    [states.question2]: 'What\'s the price of your intended home value?',
+    [states.closing]: 'That\'s cool. It\'s nice to meet you!',
 }
 
 app.get('/webhook', (req, res) => {
