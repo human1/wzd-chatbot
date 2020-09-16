@@ -39,7 +39,7 @@ const states = {
     closing: 'closing',
 }
 
-// mapping of each state to the next state
+// mapping of each state to the next state. Setup sen
 const nextStates = {
     [states.question1]: states.question2,
     [states.question2]: states.closing,
@@ -82,6 +82,7 @@ app.post('/webhook', (req, res) => {
                 const senderId = event.sender.id
                 if (!users[senderId] || !users[senderId].currentState) {
                     users[senderId] = {};
+                    users[senderId].answer = event.message.text;
                     users[senderId].currentState = states.question1;
                 } else {
                     // store the answer and update the state
@@ -89,15 +90,11 @@ app.post('/webhook', (req, res) => {
                     users[senderId].currentState = nextStates[users[senderId].currentState];
                 }
                 // send a message to the user via the Messenger API
-                console.log('----');
-                console.log(users);
-                console.log(users[senderId].answer);
-                console.log('-----');
                 const _question = questionList[users[senderId].currentState];
                 if (_question) {
                     sendTextMessage(senderId, _question);
                     // Save to API.
-                    // collectData(senderId, "", _question, users[senderId].answer, "");
+                    collectData(senderId, "", _question, users[senderId].answer, "");
                 }
             });
         });
