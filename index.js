@@ -81,23 +81,29 @@ app.post('/webhook', (req, res) => {
         body.entry.forEach((pageEntry) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
-                // keep track of each user by their senderId
-                const senderId = event.sender.id
-                if (!users[senderId] || !users[senderId].currentState) {
-                    users[senderId] = {};
-                    users[senderId].answer = event.message.text;
-                    users[senderId].currentState = states.question1;
-                } else {
-                    // store the answer and update the state
-                    users[senderId].answer = event.message.text;
-                    users[senderId].currentState = nextStates[users[senderId].currentState];
-                }
-                // send a message to the user via the Messenger API
-                const _question = questionList[users[senderId].currentState];
-                const _key = keys[users[senderId].currentState];
-                if (_question) {
-                    // Process with BE
-                    connectWithBackend(senderId, _question, _key);
+                try {
+                    // keep track of each user by their senderId
+                    const senderId = event.sender.id
+                    if (!users[senderId] || !users[senderId].currentState) {
+                        users[senderId] = {};
+                        users[senderId].answer = event.message.text;
+                        users[senderId].currentState = states.question1;
+                    } else {
+                        // store the answer and update the state
+                        users[senderId].answer = event.message.text;
+                        users[senderId].currentState = nextStates[users[senderId].currentState];
+                    }
+                    // send a message to the user via the Messenger API
+                    const _question = questionList[users[senderId].currentState];
+                    const _key = keys[users[senderId].currentState];
+                    if (_question) {
+                        // Process with BE
+                        connectWithBackend(senderId, _question, _key);
+                    }
+                } catch (e) {
+                    Sentry.captureException(e);
+                } finally {
+                    transaction.finish();
                 }
             });
         });
@@ -105,7 +111,8 @@ app.post('/webhook', (req, res) => {
 });
 
 function sendTextMessage(sender_psid, message) {
-    let request_body = {
+    console.log('-- Process sendTextMessage()');
+    const request_body = {
         "recipient": {
             "id": sender_psid
         },
@@ -113,6 +120,7 @@ function sendTextMessage(sender_psid, message) {
             "text": message
         }
     }
+    console.log(request_body)
 
     // Send the HTTP request to the Messenger Platform
     request({
@@ -134,25 +142,16 @@ function connectWithBackend(fbid, _question, _key) {
         "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
         "method": "GET",
     }, (err, res, body) => {
-        console.log('--- Connect with BE success!');
-        console.log(body);
-        try {
-            Ab();
-            sendTextMessage(fbid, _question);
-            collectData(fbid, "", _question, users[fbid].answer, _key);
-            if (err) {
-                console.error("Unable to Connect with BE:", err);
-            }
-        } catch (e) {
-            Sentry.captureException(e);
-        } finally {
-            transaction.finish();
+        sendTextMessage(fbid, _question);
+        collectData(fbid, "", _question, users[fbid].answer, _key);
+        if (err) {
+            console.error("Unable to Connect with BE:", err);
         }
     });
 }
 
 function collectData(fbid, username, question, answer, key) {
-    console.log('Process collect data')
+    console.log('Process collect data');
     const request_body = {
         "fbid": fbid,
         "username": username,
@@ -160,6 +159,7 @@ function collectData(fbid, username, question, answer, key) {
         "answer": answer,
         "key": key,
     };
+    console.log(request_body);
 
     // Send the HTTP request to the Messenger Platform
     request({
