@@ -5,11 +5,10 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
 
 const Sentry = require("@sentry/node");
-const Tracing = require("@sentry/tracing");
 const transaction = Sentry.startTransaction({
     op: "test",
     name: "My First Test Transaction",
-  });
+});
 
 const
     request = require('request'),
