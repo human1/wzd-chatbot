@@ -81,29 +81,23 @@ app.post('/webhook', (req, res) => {
         body.entry.forEach((pageEntry) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
-                try {
-                    // keep track of each user by their senderId
-                    const senderId = event.sender.id
-                    if (!users[senderId] || !users[senderId].currentState) {
-                        users[senderId] = {};
-                        users[senderId].answer = event.message.text;
-                        users[senderId].currentState = states.question1;
-                    } else {
-                        // store the answer and update the state
-                        users[senderId].answer = event.message.text;
-                        users[senderId].currentState = nextStates[users[senderId].currentState];
-                    }
-                    // send a message to the user via the Messenger API
-                    const _question = questionList[users[senderId].currentState];
-                    const _key = keys[users[senderId].currentState];
-                    if (_question) {
-                        // Process with BE
-                        connectWithBackend(senderId, _question, _key);
-                    }
-                } catch (e) {
-                    Sentry.captureException(e);
-                } finally {
-                    transaction.finish();
+                // keep track of each user by their senderId
+                const senderId = event.sender.id
+                if (!users[senderId] || !users[senderId].currentState) {
+                    users[senderId] = {};
+                    users[senderId].answer = event.message.text;
+                    users[senderId].currentState = states.question1;
+                } else {
+                    // store the answer and update the state
+                    users[senderId].answer = event.message.text;
+                    users[senderId].currentState = nextStates[users[senderId].currentState];
+                }
+                // send a message to the user via the Messenger API
+                const _question = questionList[users[senderId].currentState];
+                const _key = keys[users[senderId].currentState];
+                if (_question) {
+                    // Process with BE
+                    connectWithBackend(senderId, _question, _key);
                 }
             });
         });
@@ -142,10 +136,16 @@ function connectWithBackend(fbid, _question, _key) {
     }, (err, res, body) => {
         console.log('--- Connect with BE success!');
         console.log(body);
-        sendTextMessage(fbid, _question);
-        collectData(fbid, "", _question, users[fbid].answer, _key);
-        if (err) {
-            console.error("Unable to Connect with BE:", err);
+        try {
+            sendTextMessage(fbid, _question);
+            collectData(fbid, "", _question, users[fbid].answer, _key);
+            if (err) {
+                console.error("Unable to Connect with BE:", err);
+            }
+        } catch (e) {
+            Sentry.captureException(e);
+        } finally {
+            transaction.finish();
         }
     });
 }
