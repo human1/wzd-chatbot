@@ -6,8 +6,8 @@ const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
 
 const Sentry = require("@sentry/node");
 const transaction = Sentry.startTransaction({
-    op: "test",
-    name: "My First Test Transaction",
+    op: "fbBot",
+    name: "FB bot",
 });
 
 const
