@@ -4,6 +4,8 @@ require('dotenv').config();
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
 
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
 
 const
     request = require('request'),
@@ -13,6 +15,11 @@ const
 
 const host = process.env.HOST;
 const port = process.env.PORT;
+
+Sentry.init({
+    dsn: "https://8d22c72f17cc4fe891075c02cf80f78b@o449393.ingest.sentry.io/5432221",
+    tracesSampleRate: 1.0,
+});
 
 app.listen(port, host, () => console.log('webhook is listening at port: ' + port));
 
@@ -70,23 +77,29 @@ app.post('/webhook', (req, res) => {
         body.entry.forEach((pageEntry) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
-                // keep track of each user by their senderId
-                const senderId = event.sender.id
-                if (!users[senderId] || !users[senderId].currentState) {
-                    users[senderId] = {};
-                    users[senderId].answer = event.message.text;
-                    users[senderId].currentState = states.question1;
-                } else {
-                    // store the answer and update the state
-                    users[senderId].answer = event.message.text;
-                    users[senderId].currentState = nextStates[users[senderId].currentState];
-                }
-                // send a message to the user via the Messenger API
-                const _question = questionList[users[senderId].currentState];
-                const _key = keys[users[senderId].currentState];
-                if (_question) {
-                    // Process with BE
-                    connectWithBackend(senderId, _question, _key);
+                try {
+                    // keep track of each user by their senderId
+                    const senderId = event.sender.id
+                    if (!users[senderId] || !users[senderId].currentState) {
+                        users[senderId] = {};
+                        users[senderId].answer = event.message.text;
+                        users[senderId].currentState = states.question1;
+                    } else {
+                        // store the answer and update the state
+                        users[senderId].answer = event.message.text;
+                        users[senderId].currentState = nextStates[users[senderId].currentState];
+                    }
+                    // send a message to the user via the Messenger API
+                    const _question = questionList[users[senderId].currentState];
+                    const _key = keys[users[senderId].currentState];
+                    if (_question) {
+                        // Process with BE
+                        connectWithBackend(senderId, _question, _key);
+                    }
+                } catch (e) {
+                    Sentry.captureException(e);
+                } finally {
+                    transaction.finish();
                 }
             });
         });
@@ -98,7 +111,7 @@ function sendTextMessage(sender_psid, message) {
         "recipient": {
             "id": sender_psid
         },
-        "message": { 
+        "message": {
             "text": message
         }
     }
