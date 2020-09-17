@@ -137,6 +137,7 @@ function connectWithBackend(fbid, _question, _key) {
         console.log('--- Connect with BE success!');
         console.log(body);
         try {
+            Ab();
             sendTextMessage(fbid, _question);
             collectData(fbid, "", _question, users[fbid].answer, _key);
             if (err) {
