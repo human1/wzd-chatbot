@@ -54,6 +54,20 @@ const questionList = {
     [states.closing]: 'That\'s cool. It\'s nice to meet you!',
 }
 
+app.get('/', async (req, res) => {
+	const healthcheck = {
+		uptime: process.uptime(),
+		message: 'OK',
+		timestamp: Date.now()
+	};
+	try {
+		res.send(healthcheck);
+	} catch (e) {
+		healthcheck.message = e;
+		res.status(503).send();
+	}
+});
+
 app.get('/webhook', (req, res) => {
     const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
     let mode = req.query['hub.mode'];
