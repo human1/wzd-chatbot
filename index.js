@@ -1,21 +1,19 @@
-"use strict";
-require('dotenv').config({ path: __dirname + '/config/.env'});
-
-const request = require("request");
-const express = require("express");
-const body_parser = require("body-parser");
-const app = express().use(body_parser.json());
+'use strict';
+require('dotenv').config();
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const FACEBOOK_GRAPH_API_BASE_URL = process.env.FACEBOOK_GRAPH_API_BASE_URL;
-const HOST = process.env.HOST;
-const PORT = process.env.PORT;
+const FACEBOOK_GRAPH_API_BASE_URL = 'https://graph.facebook.com/v2.6/';
 
-app.listen(PORT, HOST, () =>
-  console.log("webhook is listening at port: " + PORT)
-);
+const
+    request = require('request'),
+    express = require('express'),
+    body_parser = require('body-parser'),
+    app = express().use(body_parser.json());
 
-const ENV_MODE = process.env.MODE
+const host = process.env.HOST;
+const port = process.env.PORT;
+
+app.listen(port, host, () => console.log('webhook is listening at port: ' + port));
 
 // optionally store this in a database
 const users = {}
@@ -86,65 +84,39 @@ app.post('/webhook', (req, res) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
                 // keep track of each user by their senderId
-                console.log('==--==--');
-                console.log(event);
-                console.log('*************');
-                console.log(users);
-                console.log('==--==--');
                 const senderId = event.sender.id
                 if (!users[senderId] || !users[senderId].currentState) {
                     users[senderId] = {};
                     users[senderId].answer = event.message.text;
                     users[senderId].currentState = states.question1;
                 } else {
-                    // store the answer and update the next question
+                    // store the answer and update the state
                     users[senderId].answer = event.message.text;
                     users[senderId].currentState = nextStates[users[senderId].currentState];
                 }
                 // send a message to the user via the Messenger API
-                const _nextQuestion = questionList[users[senderId].currentState];
-                const _answer = users[senderId].answer;
+                const _question = questionList[users[senderId].currentState];
                 const _key = keys[users[senderId].currentState];
-                if (_nextQuestion) {
+                if (_question) {
                     // Process with BE
-                    connectWithBackend(senderId, _nextQuestion, _answer, _key);
+                    connectWithBackend(senderId, _question, _key);
                 }
             });
         });
     }
 });
 
-function connectWithBackend(fbid, _question, _answer, _key) {
-    console.log('Process login/connect with BE');
-    if ( 'dev' === ENV_MODE) {
-        console.log('dev mode');
-        console.log(_question);
-        console.log(_answer);
-        sendTextMessage(fbid, _question);
-    } else {
-        request({
-            "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
-            "method": "GET",
-        }, (err, res, body) => {
-            sendTextMessage(fbid, _question);
-            collectData(fbid, "", _question, _answer, _key);
-            if (err) {
-                console.error("Unable to Connect with BE:", err);
-            }
-        });
-    }
-}
-
-function sendTextMessage(sender_psid, contentMessage) {
+function sendTextMessage(sender_psid, message) {
     console.log('-- Process sendTextMessage()');
     const request_body = {
         "recipient": {
             "id": sender_psid
         },
         "message": {
-            "text": contentMessage
+            "text": message
         }
     }
+    console.log(request_body)
 
     // Send the HTTP request to the Messenger Platform
     request({
@@ -156,6 +128,20 @@ function sendTextMessage(sender_psid, contentMessage) {
         console.log("Message Sent Response body:", body);
         if (err) {
             console.error("Unable to send message:", err);
+        }
+    });
+}
+
+function connectWithBackend(fbid, _question, _key) {
+    console.log('Process login/connect with BE');
+    request({
+        "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
+        "method": "GET",
+    }, (err, res, body) => {
+        sendTextMessage(fbid, _question);
+        collectData(fbid, "", _question, users[fbid].answer, _key);
+        if (err) {
+            console.error("Unable to Connect with BE:", err);
         }
     });
 }
