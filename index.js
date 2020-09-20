@@ -7,7 +7,7 @@ const request = require("request"),
   app = express().use(body_parser.json());
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const FACEBOOK_GRAPH_API_BASE_URL = process.env.PAGE_ACCESS_TOKEN;
+const FACEBOOK_GRAPH_API_BASE_URL = process.env.FACEBOOK_GRAPH_API_BASE_URL;
 
 const mode = process.env.MODE
 const host = process.env.HOST;
