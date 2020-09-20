@@ -76,6 +76,8 @@ router.post('/webhook', (req, res) => {
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
                 // keep track of each user by their senderId
+                console.log('==--==--');
+                console.log(event);
                 const senderId = event.sender.id
                 if (!users[senderId] || !users[senderId].currentState) {
                     users[senderId] = {};
@@ -108,11 +110,6 @@ function sendTextMessage(sender_psid, message) {
             "text": message
         }
     }
-    console.log('-=====-');
-    console.log(request_body)
-    console.log(PAGE_ACCESS_TOKEN);
-    console.log(`uri: ${FACEBOOK_GRAPH_API_BASE_URL}me/messages`);
-    console.log('-=====-');
 
     // Send the HTTP request to the Messenger Platform
     request({
