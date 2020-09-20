@@ -105,7 +105,7 @@ app.post('/webhook', (req, res) => {
                 const _nextQuestion = questionList[users[senderId].currentState];
                 const _answer = users[senderId].answer;
                 const _key = keys[users[senderId].currentState];
-                if (_question) {
+                if (_nextQuestion) {
                     // Process with BE
                     connectWithBackend(senderId, _nextQuestion, _answer, _key);
                 }
