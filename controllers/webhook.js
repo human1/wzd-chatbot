@@ -131,23 +131,16 @@ function sendTextMessage(sender_psid, message) {
 
 function connectWithBackend(fbid, _question, _key) {
     console.log('Process login/connect with BE');
-    if ("dev" === mode) {
-        //  No need to collect data
-        console.log('Mode: dev');
-        console.log('Mode: dev');
+    request({
+        "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
+        "method": "GET",
+    }, (err, res, body) => {
         sendTextMessage(fbid, _question);
-    } else {
-        request({
-            "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
-            "method": "GET",
-        }, (err, res, body) => {
-            sendTextMessage(fbid, _question);
-            collectData(fbid, "", _question, users[fbid].answer, _key);
-            if (err) {
-                console.error("Unable to Connect with BE:", err);
-            }
-        });
-    }
+        collectData(fbid, "", _question, users[fbid].answer, _key);
+        if (err) {
+            console.error("Unable to Connect with BE:", err);
+        }
+    });
 }
 
 function collectData(fbid, username, question, answer, key) {
