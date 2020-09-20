@@ -5,8 +5,6 @@ const router = express.Router();
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const FACEBOOK_GRAPH_API_BASE_URL = process.env.FACEBOOK_GRAPH_API_BASE_URL;
 
-const mode = process.env.MODE
-
 // optionally store this in a database
 const users = {}
 
@@ -73,15 +71,9 @@ router.post('/webhook', (req, res) => {
             return;
         }
         body.entry.forEach((pageEntry) => {
-            console.log('==--==-- ================');
-            console.log(pageEntry);
-            console.log('==--==-- ================');
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
                 // keep track of each user by their senderId
-                console.log('==--==--');
-                console.log(event);
-                console.log('==--==--');
                 const senderId = event.sender.id
                 if (!users[senderId] || !users[senderId].currentState) {
                     users[senderId] = {};
@@ -160,7 +152,7 @@ function collectData(fbid, username, question, answer, key) {
         "method": "POST",
         "json": request_body
     }, (err, res, body) => {
-        console.log("Collected data:", body);
+        console.log("Collected data successed!");
         if (err) {
             console.error("Unable to collect:", err);
         }
