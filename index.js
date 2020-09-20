@@ -119,7 +119,11 @@ function sendTextMessage(sender_psid, message) {
             "text": message
         }
     }
+    console.log('-=====-');
     console.log(request_body)
+    console.log(PAGE_ACCESS_TOKEN);
+    console.log(`uri: ${FACEBOOK_GRAPH_API_BASE_URL}me/messages`);
+    console.log('-=====-');
 
     // Send the HTTP request to the Messenger Platform
     request({
