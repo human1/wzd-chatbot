@@ -1,8 +1,6 @@
-const
-    request = require('request'),
-    express = require('express'),
-    body_parser = require('body-parser'),
-    app = express().use(body_parser.json());
+const request = require("request");
+const express = require("express");
+const router = express.Router();
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const FACEBOOK_GRAPH_API_BASE_URL = process.env.FACEBOOK_GRAPH_API_BASE_URL;

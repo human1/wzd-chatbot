@@ -1,6 +1,8 @@
 "use strict";
-require('dotenv').config({ path: __dirname + '/config/.env'})
-const express = require("express");
+require('dotenv').config({ path: __dirname + '/config/.env'});
+
+require("request");
+require("express");
 const body_parser = require("body-parser");
 const app = express().use(body_parser.json());
 
