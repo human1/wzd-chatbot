@@ -15,7 +15,7 @@ app.listen(PORT, HOST, () =>
   console.log("webhook is listening at port: " + PORT)
 );
 
-const MODE = process.env.MODE
+const ENV_MODE = process.env.MODE
 
 // optionally store this in a database
 const users = {}
@@ -83,9 +83,6 @@ app.post('/webhook', (req, res) => {
             return;
         }
         body.entry.forEach((pageEntry) => {
-            console.log('==--==-- ================');
-            console.log(pageEntry);
-            console.log('==--==-- ================');
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
                 // keep track of each user by their senderId
@@ -104,24 +101,46 @@ app.post('/webhook', (req, res) => {
                 }
                 // send a message to the user via the Messenger API
                 const _question = questionList[users[senderId].currentState];
+                const _answer = users[fbid].answer;
                 const _key = keys[users[senderId].currentState];
                 if (_question) {
                     // Process with BE
-                    connectWithBackend(senderId, _question, _key);
+                    connectWithBackend(senderId, _question, _answer, _key);
                 }
             });
         });
     }
 });
 
-function sendTextMessage(sender_psid, message) {
+function connectWithBackend(fbid, _question, _answer, _key) {
+    console.log('Process login/connect with BE');
+    if ( 'dev' === ENV_MODE) {
+        console.log('dev mode');
+        console.log(_question);
+        console.log(_answer);
+        sendTextMessage(fbid, _question);
+    } else {
+        request({
+            "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
+            "method": "GET",
+        }, (err, res, body) => {
+            sendTextMessage(fbid, _question);
+            collectData(fbid, "", _question, _answer, _key);
+            if (err) {
+                console.error("Unable to Connect with BE:", err);
+            }
+        });
+    }
+}
+
+function sendTextMessage(sender_psid, contentMessage) {
     console.log('-- Process sendTextMessage()');
     const request_body = {
         "recipient": {
             "id": sender_psid
         },
         "message": {
-            "text": message
+            "text": contentMessage
         }
     }
 
@@ -135,20 +154,6 @@ function sendTextMessage(sender_psid, message) {
         console.log("Message Sent Response body:", body);
         if (err) {
             console.error("Unable to send message:", err);
-        }
-    });
-}
-
-function connectWithBackend(fbid, _question, _key) {
-    console.log('Process login/connect with BE');
-    request({
-        "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
-        "method": "GET",
-    }, (err, res, body) => {
-        sendTextMessage(fbid, _question);
-        collectData(fbid, "", _question, users[fbid].answer, _key);
-        if (err) {
-            console.error("Unable to Connect with BE:", err);
         }
     });
 }
