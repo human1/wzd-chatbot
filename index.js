@@ -88,6 +88,8 @@ app.post('/webhook', (req, res) => {
                 // keep track of each user by their senderId
                 console.log('==--==--');
                 console.log(event);
+                console.log('*************');
+                console.log(users);
                 console.log('==--==--');
                 const senderId = event.sender.id
                 if (!users[senderId] || !users[senderId].currentState) {
@@ -96,9 +98,7 @@ app.post('/webhook', (req, res) => {
                     users[senderId].currentState = states.question1;
                 } else {
                     // store the answer and update the next question
-                    if (event.message) {
-                        users[senderId].answer = event.message.text;
-                    }
+                    users[senderId].answer = event.message.text;
                     users[senderId].currentState = nextStates[users[senderId].currentState];
                 }
                 // send a message to the user via the Messenger API
