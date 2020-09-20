@@ -101,7 +101,7 @@ app.post('/webhook', (req, res) => {
                 }
                 // send a message to the user via the Messenger API
                 const _question = questionList[users[senderId].currentState];
-                const _answer = users[fbid].answer;
+                const _answer = users[senderId].answer;
                 const _key = keys[users[senderId].currentState];
                 if (_question) {
                     // Process with BE
