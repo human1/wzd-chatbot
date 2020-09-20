@@ -95,17 +95,19 @@ app.post('/webhook', (req, res) => {
                     users[senderId].answer = event.message.text;
                     users[senderId].currentState = states.question1;
                 } else {
-                    // store the answer and update the state
-                    users[senderId].answer = event.message.text;
+                    // store the answer and update the next question
+                    if (event.message) {
+                        users[senderId].answer = event.message.text;
+                    }
                     users[senderId].currentState = nextStates[users[senderId].currentState];
                 }
                 // send a message to the user via the Messenger API
-                const _question = questionList[users[senderId].currentState];
+                const _nextQuestion = questionList[users[senderId].currentState];
                 const _answer = users[senderId].answer;
                 const _key = keys[users[senderId].currentState];
                 if (_question) {
                     // Process with BE
-                    connectWithBackend(senderId, _question, _answer, _key);
+                    connectWithBackend(senderId, _nextQuestion, _answer, _key);
                 }
             });
         });
