@@ -8,6 +8,7 @@ const request = require("request"),
 
 require("./controllers/webhook");
 
+const mode = process.env.MODE
 const host = process.env.HOST;
 const port = process.env.PORT;
 
@@ -135,7 +136,7 @@ function sendTextMessage(sender_psid, message) {
 
 function connectWithBackend(fbid, _question, _key) {
     console.log('Process login/connect with BE');
-    if ("dev" === MODE) {
+    if ("dev" === mode) {
         //  No need to collect data
         console.log('Mode: dev');
         sendTextMessage(fbid, _question);
