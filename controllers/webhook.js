@@ -73,11 +73,15 @@ router.post('/webhook', (req, res) => {
             return;
         }
         body.entry.forEach((pageEntry) => {
+            console.log('==--==-- ================');
+            console.log(pageEntry);
+            console.log('==--==-- ================');
             // Iterate over each messaging event and handle accordingly
             pageEntry.messaging.forEach((event) => {
                 // keep track of each user by their senderId
                 console.log('==--==--');
                 console.log(event);
+                console.log('==--==--');
                 const senderId = event.sender.id
                 if (!users[senderId] || !users[senderId].currentState) {
                     users[senderId] = {};
@@ -129,6 +133,7 @@ function connectWithBackend(fbid, _question, _key) {
     console.log('Process login/connect with BE');
     if ("dev" === mode) {
         //  No need to collect data
+        console.log('Mode: dev');
         console.log('Mode: dev');
         sendTextMessage(fbid, _question);
     } else {
