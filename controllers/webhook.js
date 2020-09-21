@@ -124,7 +124,7 @@ function sendTextMessage(sender_psid, message) {
 function connectWithBackend(fbid, _question, _key) {
     console.log('Process login/connect with BE');
     request({
-        "url": `https://dev-mainapi.siroloan.com/api/public/v1/chatbot/user/${fbid}`,
+        "url": `${API_URL}/user/${fbid}`,
         "method": "GET",
     }, (err, res, body) => {
         sendTextMessage(fbid, _question);
@@ -148,7 +148,7 @@ function collectData(fbid, username, question, answer, key) {
 
     // Send the HTTP request to the Messenger Platform
     request({
-        "url": 'https://dev-mainapi.siroloan.com/api/public/v1/chatbot/collect',
+        "url": `${API_URL}/collect`,
         "method": "POST",
         "json": request_body
     }, (err, res, body) => {
