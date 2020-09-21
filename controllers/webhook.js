@@ -4,6 +4,7 @@ const router = express.Router();
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const FACEBOOK_GRAPH_API_BASE_URL = process.env.FACEBOOK_GRAPH_API_BASE_URL;
+const API_URL = process.env.API_URL;
 
 // optionally store this in a database
 const users = {}
